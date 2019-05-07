@@ -1,0 +1,19 @@
+#version 450
+
+layout (points) in;
+layout (points, max_vertices = 3) out;
+
+out float outValue;
+
+void main() {    
+
+	for(int i = 0; i < 3; ++i)
+	{
+		outValue = (0.1f * i) + gl_in[0].gl_Position.x;
+		gl_Position = vec4(outValue, outValue, outValue, 1);
+		EmitVertex();
+	}
+
+
+    EndPrimitive();
+}  

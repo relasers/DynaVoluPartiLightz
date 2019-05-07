@@ -1,0 +1,110 @@
+#version 330
+
+layout (points) in;
+layout (triangle_strip, max_vertices = 24) out;
+
+const float size = 0.02;
+
+void Make_Quad(vec4 pos)
+{
+	gl_Position = pos + vec4(-size, -size, 0.0, 0.0);
+	EmitVertex();
+
+	gl_Position = pos + vec4(size, -size, 0.0, 0.0);
+	EmitVertex();
+	
+	gl_Position = pos + vec4(-size, size, 0.0, 0.0);
+	EmitVertex();
+	
+	gl_Position = pos + vec4(size, size, 0.0, 0.0);
+	EmitVertex();
+	
+	EndPrimitive();
+}
+
+
+void Make_Cube(vec4 pos)
+{
+	vec4 cubeVertex[8];
+
+	cubeVertex[0] = pos + vec4(-size, size, size, 0.0);
+	cubeVertex[1] = pos + vec4(-size, size, -size, 0.0);
+	cubeVertex[2] = pos + vec4(size, size, -size, 0.0);
+	cubeVertex[3] = pos + vec4(size, size, size, 0.0);
+	cubeVertex[4] = pos + vec4(-size, -size, size, 0.0);
+	cubeVertex[5] = pos + vec4(-size, -size, -size, 0.0);
+	cubeVertex[6] = pos + vec4(size, -size, -size, 0.0);
+	cubeVertex[7] = pos + vec4(size, -size, size, 0.0);
+
+	// Top
+	gl_Position = cubeVertex[0];
+	EmitVertex();
+	gl_Position = cubeVertex[3];
+	EmitVertex();
+	gl_Position = cubeVertex[1];
+	EmitVertex();
+	gl_Position = cubeVertex[2];
+	EmitVertex();
+	EndPrimitive();
+
+	// Bottom
+	gl_Position = cubeVertex[4];
+	EmitVertex();
+	gl_Position = cubeVertex[7];
+	EmitVertex();
+	gl_Position = cubeVertex[5];
+	EmitVertex();
+	gl_Position = cubeVertex[6];
+	EmitVertex();
+	EndPrimitive();
+
+	// Front
+	gl_Position = cubeVertex[4];
+	EmitVertex();
+	gl_Position = cubeVertex[7];
+	EmitVertex();
+	gl_Position = cubeVertex[0];
+	EmitVertex();
+	gl_Position = cubeVertex[3];
+	EmitVertex();
+	EndPrimitive();
+
+	// Left
+	gl_Position = cubeVertex[5];
+	EmitVertex();
+	gl_Position = cubeVertex[4];
+	EmitVertex();
+	gl_Position = cubeVertex[1];
+	EmitVertex();
+	gl_Position = cubeVertex[0];
+	EmitVertex();
+	EndPrimitive();
+
+	// Right
+	gl_Position = cubeVertex[7];
+	EmitVertex();
+	gl_Position = cubeVertex[6];
+	EmitVertex();
+	gl_Position = cubeVertex[3];
+	EmitVertex();
+	gl_Position = cubeVertex[2];
+	EmitVertex();
+	EndPrimitive();
+
+	// Back
+	gl_Position = cubeVertex[6];
+	EmitVertex();
+	gl_Position = cubeVertex[5];
+	EmitVertex();
+	gl_Position = cubeVertex[2];
+	EmitVertex();
+	gl_Position = cubeVertex[1];
+	EmitVertex();
+	EndPrimitive();
+}
+
+void main()
+{
+	Make_Quad(gl_in[0].gl_Position);
+}
+

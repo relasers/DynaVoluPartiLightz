@@ -1,0 +1,14 @@
+#version 330
+
+uniform sampler2D u_Texture;
+
+in vec2 v_TexPos;
+in float v_Alpha;
+
+out vec4 FragColor;
+
+void main()
+{
+    FragColor = texture(u_Texture, v_TexPos);
+	FragColor.a *= v_Alpha;
+}

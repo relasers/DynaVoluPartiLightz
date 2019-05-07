@@ -1,0 +1,14 @@
+#version 450
+
+in vec3 a_Position;
+out float outValue;
+
+void main()
+{
+	gl_Position = vec4(a_Position, 1);
+
+	vec3 newPos = a_Position;
+	newPos = a_Position * a_Position;
+
+	outValue = newPos.y;
+}

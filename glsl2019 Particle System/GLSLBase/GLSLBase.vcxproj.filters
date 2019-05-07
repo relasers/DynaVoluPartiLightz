@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Renderer.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GLSLBase.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="LoadPng.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="CCamera.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Renderer.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="LoadPng.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="CCamera.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\ProxyGeometry.vs">
+      <Filter>Shader\3D</Filter>
+    </None>
+    <None Include="Shaders\ProxyGeometry.fs">
+      <Filter>Shader\3D</Filter>
+    </None>
+    <None Include="Shaders\SolidRect.fs">
+      <Filter>Shader\2D</Filter>
+    </None>
+    <None Include="Shaders\SolidRect.vs">
+      <Filter>Shader\2D</Filter>
+    </None>
+    <None Include="Shaders\Quad.fs">
+      <Filter>Shader\3D</Filter>
+    </None>
+    <None Include="Shaders\Quad.vs">
+      <Filter>Shader\3D</Filter>
+    </None>
+    <None Include="Shaders\VertexTextureParticleWithVelocity.glfs">
+      <Filter>Shader\3D</Filter>
+    </None>
+    <None Include="Shaders\VertexTextureParticleWithVelocity.glvs">
+      <Filter>Shader\3D</Filter>
+    </None>
+    <None Include="Shaders\VertexParticle.glfs">
+      <Filter>Shader\Particle System\Ver1</Filter>
+    </None>
+    <None Include="Shaders\VertexParticle.glgs">
+      <Filter>Shader\Particle System\Ver1</Filter>
+    </None>
+    <None Include="Shaders\VertexParticle.glvs">
+      <Filter>Shader\Particle System\Ver1</Filter>
+    </None>
+    <None Include="Shaders\VertexParticle_ver2.glfs">
+      <Filter>Shader\Particle System\Ver2</Filter>
+    </None>
+    <None Include="Shaders\VertexParticle_ver2.glgs">
+      <Filter>Shader\Particle System\Ver2</Filter>
+    </None>
+    <None Include="Shaders\VertexParticle_ver2.glvs">
+      <Filter>Shader\Particle System\Ver2</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source">
+      <UniqueIdentifier>{a7fcb93d-3717-43ab-b316-e9d0ce5b8225}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header">
+      <UniqueIdentifier>{281c75ca-d516-457d-94dd-38314bf09c82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader">
+      <UniqueIdentifier>{67bf60d2-2daa-4412-a92a-1ef604d4703f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader\3D">
+      <UniqueIdentifier>{2bbb72ba-27c2-48a4-b00b-b71f63a62c84}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader\2D">
+      <UniqueIdentifier>{4e3f3af4-59bb-44a6-abc1-75318533d17c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader\Particle System">
+      <UniqueIdentifier>{d0f163a3-9b12-4305-b1bd-0130d44f925f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader\Particle System\Ver1">
+      <UniqueIdentifier>{5b3b43fd-ef64-43d9-b2fe-1e48a3579dae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader\Particle System\Ver2">
+      <UniqueIdentifier>{615b344f-672a-470e-9695-4b520d08e149}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

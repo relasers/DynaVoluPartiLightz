@@ -1,0 +1,38 @@
+#version 330
+
+uniform float u_Time;	// 시간
+uniform float u_Period;	// 사용자가 부여하는 Sin의 주기
+uniform float u_Height;	// 사용자가 부여하는 Sin의 높이
+uniform mat4 u_ProjView;
+
+in vec4 a_Position;
+
+void main()
+{
+	const float PI = 3.1415926;
+
+	// 앞에서 부터 출력하되 보이면 안되는 것들은 아에 다른 위치로 옮긴다.
+	float newX = -10;
+	float newY =  0;
+
+	// 가장 앞(x == 1)인 것 부터 출력하기 위한 조건
+	if (a_Position.x  > 1 - u_Time)
+	{
+		// 시간을 0~2로 바꾸되 개개의 포인트마다 다른 시간을 가지게 하기 위해 a_Position.x를 더한다.
+		// 시작 지점이 -1에 가까운 지점이 되도록 하기 위하여 1을 더한다.
+		float newTime = fract((1 + a_Position.x + u_Time) / 2) * 2;
+
+		// 1을 빼게 되면 시작 지점은 -0.~~~가 된다.
+		newX = newTime - 1;
+
+		// 주기를 랜덤하게 처리한다.
+		newY = sin((newTime + a_Position.w) * PI * u_Period);
+		// 높이를 랜덤하게 만든다.
+		newY = newY * a_Position.w * u_Height;
+		// 시작에서 작고 끝에서 커지게 만든다.
+		// 2로 나누는 이유는 newTime이 0~2 범위이므로 나누지 않으면 끝에가서 의도한 크기보다 두배로 커진다.
+		newY = newY * newTime / 2;
+	}
+	
+	gl_Position = u_ProjView * vec4(newX, newY, 0, 1);
+}

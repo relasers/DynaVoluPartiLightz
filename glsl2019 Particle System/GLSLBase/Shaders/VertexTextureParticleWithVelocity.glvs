@@ -1,0 +1,31 @@
+#version 330
+
+uniform float u_Time;
+uniform mat4 u_ProjView;
+
+in vec3 a_Position;
+in vec2 a_TexPos;
+in vec4 a_Velocity;
+
+out vec2 v_TexPos;
+out float v_Alpha;
+
+void main()
+{
+	vec3 newPos = vec3(-1000, -1000, -1000);
+
+	// 각 파티클 별 시간 구하기
+	// fract 내부의 나누기는 시간을 느리게 만들기 위한 용도
+	float newTime = fract((u_Time + a_Velocity.w) / 3) * 3;
+
+	// 중력을 임의의 값으로 설정
+	vec3 gravity = vec3(0, -1, 0);
+
+	// s = v * t ,  s = a * t^2 이용한 위치 설정
+	newPos = a_Position.xyz + a_Velocity.xyz * newTime + gravity * newTime * newTime * 0.5;
+	v_TexPos = a_TexPos;
+
+	// 상단부분(생성되는 부분)은 잘 안보이게 처리
+	v_Alpha = newTime;
+    gl_Position = u_ProjView * vec4(newPos, 1.0);
+}
