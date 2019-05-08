@@ -7,9 +7,8 @@ private:
 
 	glm::vec3 mPosition;
 	glm::vec3 mEulerAngle;
-	glm::vec4 mQuaternion;
+	glm::quat mQuaternion;
 	glm::vec3 mScale;
-
 	glm::mat4 m_m4Model;
 
 

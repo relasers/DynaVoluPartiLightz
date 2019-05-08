@@ -158,6 +158,7 @@
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="GameObect.h" />
+    <ClInclude Include="Light.h" />
     <ClInclude Include="LoadPng.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Renderer.h" />

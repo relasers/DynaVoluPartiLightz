@@ -51,7 +51,7 @@ void RenderScene(void)
 	//g_Renderer->PageFlipCase02(curr_theta, AxisPivot, AxisPivotTheta);
 	g_Renderer->ResetFrameBuffer();
 
-	g_Renderer->DrawTexture(g_Renderer->GetTextureID("OldPage"), 0, 0, 200, 200);
+	//g_Renderer->DrawTexture(g_Renderer->GetTextureID("OldPage"), 0, 0, 200, 200);
 	//g_Renderer->PageFlipCase02_temp(curr_theta, AxisPivot, AxisPivotTheta);
 	glutSwapBuffers();
 }
