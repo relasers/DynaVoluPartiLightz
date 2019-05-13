@@ -3,7 +3,7 @@
 
 Camera::Camera() : mMatrixMode(CameraMatrixMode::Perspective), mFov(45.0f)
 {
-	mCameraPos = glm::vec3(0.0f, 25.0f, 50.5f);
+	mCameraPos = glm::vec3(0.0f, 5.5f, 15.5f);
 	mCameraLookatPos = glm::vec3(0.0f, 0.0f, 0.0f);
 	mCameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 }

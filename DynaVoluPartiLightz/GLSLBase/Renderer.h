@@ -7,6 +7,7 @@
 #include "Mesh.h"
 #include "Camera.h"
 #include "Transform.h"
+#include "Light.h"
 
 #include "Dependencies\glew.h"
 #include "Dependencies\wglew.h"
@@ -28,14 +29,8 @@ public:
 	void Test();
 
 	void DrawPlaneMesh();
-
 	void DrawSolidMesh();
 
-
-	void PageFlipCase01(float _theta);
-	void PageFlipCase01Tex(float _theta,glm::vec2 _PivotPos = glm::vec2(0.5f,0.5f), float _PivotLineTheta = 0 );
-	void PageFlipCase02(float _delta, glm::vec2 _PivotPos = glm::vec2(0.5f, 0.5f), float _PivotLineTheta = 0);
-	void PageFlipCase02_temp(float _delta, glm::vec2 _PivotPos = glm::vec2(0.5f, 0.5f), float _PivotLineTheta = 0);
 
 	void DrawTexture(GLuint textureID, GLuint x, GLuint y, GLuint width, GLuint height);
 
@@ -56,7 +51,7 @@ private:
 	void CreateFrameBufferObjects();
 	void CreateTextureDrawResource();
 	void CreateVBOandIBOfromPlaneMesh(PlaneMesh& mesh);
-	
+	void CreateVBOandIBOofLoadedMeshes();
 
 
 	unsigned char * Renderer::loadBMPRaw(const char * imagepath, unsigned int& outWidth, unsigned int& outHeight);
@@ -73,6 +68,10 @@ private:
 
 	PlaneMesh mPlaneMesh;
 	Transform mPlaneTransform;
+	
+	DirectionalLight mMainDirectionalLight;
+
+	std::unordered_map < std::string, Mesh> mMeshes;
 
 	std::unordered_map < std::string, GLuint > m_VBO;
 	std::unordered_map < std::string, GLuint > m_IBO;

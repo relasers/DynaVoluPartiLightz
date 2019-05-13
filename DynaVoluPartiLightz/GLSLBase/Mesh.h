@@ -8,9 +8,12 @@ protected:
 
 	std::vector<float> mVerticesData;
 	std::vector<unsigned int> mIndices;
+
+	unsigned int mNumVertices;
 	
 public:
 	Mesh();
+	Mesh(std::string _name , std::string path);
 	virtual ~Mesh();
 
 	virtual bool BuildGeomData() { return false; };
@@ -28,6 +31,14 @@ public:
 	std::vector<Vertex> GetVerticesVector() { return mVertices; }
 	std::vector<float> GetVerticesData() { return mVerticesData; }
 	std::vector<unsigned int> GetIndicesVector() { return mIndices; }
+	std::string GetName() const { return mName; }
+	unsigned int GetNumVertices() const { return mNumVertices; }
+
+
+	bool loadOBJ(std::string path);
+	void InitLoadMesh(const aiMesh * pMesh);
+	void UpdateVerticesDataForVBO();
+
 
 };
 
@@ -40,7 +51,4 @@ public:
 	virtual bool BuildGeomData() override;
 	/// divide level : 0 --> Quad 
 	virtual bool BuildGeomData(float size, float divide_level);
-
-
-
 };

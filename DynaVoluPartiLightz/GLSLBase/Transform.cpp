@@ -3,6 +3,7 @@
 
 Transform::Transform()
 {
+	Update();
 }
 
 Transform::~Transform()
@@ -29,7 +30,7 @@ void Transform::UpdateMatrix()
 	mQuaternion = glm::quat(mEulerAngle);
 	glm::mat4 m4Rot = glm::toMat4(mQuaternion);
 
-	glm::mat4 m4Scale = glm::scale(glm::mat4(1.f), mScale);
+	glm::mat4 m4Scale = glm::scale(glm::mat4(50.f), mScale);
 
 	m_m4Model = m4Trans * m4Rot * m4Scale;
 }

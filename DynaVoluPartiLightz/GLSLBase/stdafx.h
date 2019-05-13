@@ -15,9 +15,18 @@
 #include <math.h>
 #include <algorithm>
 
+// 
 #include "Dependencies\glew.h"
 #include "Dependencies\wglew.h"
 #include "Dependencies\glm/glm.hpp"
 #include "Dependencies\glm/gtc/matrix_transform.hpp"
 #include "Dependencies\glm/gtx/euler_angles.hpp"
 #include "Dependencies\glm/gtx/quaternion.hpp"
+
+// assimp for import Model
+#include "Dependencies\assimp\Importer.hpp"
+#include "Dependencies\assimp\cimport.h"
+#include "Dependencies\assimp\postprocess.h"
+#include "Dependencies\assimp\scene.h"
+
+#pragma comment(lib, "assimp.lib")

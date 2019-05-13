@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="Renderer.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source</Filter>
     </ClCompile>
@@ -19,15 +16,20 @@
     <ClCompile Include="Mesh.cpp">
       <Filter>Source\Mesh</Filter>
     </ClCompile>
-    <ClCompile Include="Transform.cpp" />
     <ClCompile Include="Vertex.cpp">
       <Filter>Source\Vertex</Filter>
     </ClCompile>
+    <ClCompile Include="Transform.cpp">
+      <Filter>Source\Transform</Filter>
+    </ClCompile>
+    <ClCompile Include="Light.cpp">
+      <Filter>Source\Light</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer.cpp">
+      <Filter>Source\Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Renderer.h">
-      <Filter>Header</Filter>
-    </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>Header</Filter>
     </ClInclude>
@@ -44,9 +46,17 @@
       <Filter>Source\Mesh</Filter>
     </ClInclude>
     <ClInclude Include="GameObect.h" />
-    <ClInclude Include="Transform.h" />
     <ClInclude Include="Vertex.h">
       <Filter>Source\Vertex</Filter>
+    </ClInclude>
+    <ClInclude Include="Transform.h">
+      <Filter>Source\Transform</Filter>
+    </ClInclude>
+    <ClInclude Include="Light.h">
+      <Filter>Source\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer.h">
+      <Filter>Source\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -93,6 +103,12 @@
     </Filter>
     <Filter Include="Source\Light">
       <UniqueIdentifier>{6627e555-42b3-4d1e-bf04-14559844a582}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Transform">
+      <UniqueIdentifier>{65757746-af77-4ef5-97ef-7f57d5373a18}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Renderer">
+      <UniqueIdentifier>{0c2b1d75-59e4-4b3b-9518-f6f3d8b64bc7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
