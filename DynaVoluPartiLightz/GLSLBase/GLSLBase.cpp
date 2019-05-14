@@ -67,6 +67,7 @@ void Idle(void)
 
 void MouseInput(int button, int state, int x, int y)
 {
+	g_Renderer->GetMainCamera().MouseInput(x,y,button,state);
 	if ((button == 3) || (button == 4))
 	{
 		if (button == 3) // UP
@@ -78,42 +79,13 @@ void MouseInput(int button, int state, int x, int y)
 			target_delta = std::max<float>(target_delta - 0.01, 0);
 	}
 
-
-
-
-
-
-
 	RenderScene();
 }
 
 void KeyInput(unsigned char key, int x, int y)
 {
 	float delta = 0.1f;
-	if (key == 0x57) // W
-	{
-		g_Renderer->CameraMove(glm::vec3(0, 0, 1), delta);
-	}
-	if (key == 0x41) // A
-	{
-		g_Renderer->CameraMove(glm::vec3(-1, 0, 0), delta);
-	}
-	if (key == 0x53) // S
-	{
-		g_Renderer->CameraMove(glm::vec3(0, 0, -1), delta);
-	}
-	if (key == 0x44) // D
-	{
-		g_Renderer->CameraMove(glm::vec3(1, 0, 0), delta);
-	}
-	if (key == 0x51) // Q
-	{
-		g_Renderer->CameraMove(glm::vec3(0, -1, 0), delta);
-	}
-	if (key == 0x45) // E
-	{
-		g_Renderer->CameraMove(glm::vec3(0, 1, 0), delta);
-	}
+	g_Renderer->GetMainCamera().KeyInput(key,x,y);
 	
 	float movedelta = 0.1f;
 	if (key == 0x34)
@@ -146,10 +118,12 @@ void KeyInput(unsigned char key, int x, int y)
 
 void SpecialKeyInput(int key, int x, int y)
 {
+	RenderScene();
+}
 
-
-	
-
+void MouseMove(int x, int y)
+{
+	g_Renderer->GetMainCamera().MouseInput(x, y);
 	RenderScene();
 }
 
@@ -180,7 +154,7 @@ int main(int argc, char **argv)
 	glutKeyboardFunc(KeyInput);
 	glutMouseFunc(MouseInput);
 	glutSpecialFunc(SpecialKeyInput);
-
+	glutMotionFunc(MouseMove);
 	glutMainLoop();
 
 	delete g_Renderer;

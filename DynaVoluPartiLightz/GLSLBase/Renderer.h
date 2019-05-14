@@ -42,6 +42,8 @@ public:
 
 	void Update();
 	void CameraMove(glm::vec3 _velocity, float delta);
+	Camera& GetMainCamera() { return mCamera; }
+
 	GLuint GetTextureID(std::string _name) { return m_Texture[_name]; }
 private:
 	void Initialize(int windowSizeX, int windowSizeY);
