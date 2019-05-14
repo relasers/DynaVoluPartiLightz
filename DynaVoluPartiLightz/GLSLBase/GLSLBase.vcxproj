@@ -160,7 +160,9 @@
     <ClInclude Include="GameObect.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="LoadPng.h" />
+    <ClInclude Include="MathUtility.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Particle.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -172,6 +174,7 @@
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="LoadPng.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Particle.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="GLSLBase.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -184,8 +187,11 @@
     <ClCompile Include="Vertex.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shaders\BasicParticle.frag" />
+    <None Include="Shaders\BasicParticle.vert" />
     <None Include="Shaders\BasicTexture.frag" />
     <None Include="Shaders\BasicTexture.vert" />
+    <None Include="Shaders\ParticleSimulate.comp" />
     <None Include="Shaders\SolidMesh.frag" />
     <None Include="Shaders\SolidMesh.vert" />
     <None Include="Shaders\SolidRect.frag" />

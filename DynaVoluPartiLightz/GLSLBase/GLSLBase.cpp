@@ -45,6 +45,10 @@ void RenderScene(void)
 	//g_Renderer->DrawPlaneMesh();
 	g_Renderer->SetFrameBuffer();
 	g_Renderer->DrawSolidMesh();
+
+	g_Renderer->SimulateParticle();
+	g_Renderer->DrawParticle();
+
 	g_Renderer->ResetFrameBuffer();
 	//g_Renderer->DrawTexture(g_Renderer->GetTextureID("OldPage"), 0, 0, 200, 200);
 	glutSwapBuffers();

@@ -30,3 +30,5 @@
 #include "Dependencies\assimp\scene.h"
 
 #pragma comment(lib, "assimp.lib")
+
+#include "MathUtility.h"

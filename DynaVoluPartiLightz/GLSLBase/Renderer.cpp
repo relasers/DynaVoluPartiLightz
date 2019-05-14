@@ -32,12 +32,14 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 
 	m_Shaders["BasicTexture"] = CompileShaders("./Shaders/BasicTexture.vert", "./Shaders/BasicTexture.frag");
 	
-
-
+	m_Shaders["BasicParticle"] = CompileShaders("./Shaders/BasicParticle.vert", "./Shaders/BasicParticle.frag");
+	m_Shaders["ParticleSimulate"] = CompileComputeShaders("./Shaders/ParticleSimulate.comp");
 	//Create Geometry Data
 	CreateGeometryDataMeshes();
 	//Create VBOs
 	CreateVertexBufferObjects();
+	// Create SSBO for Particles
+	CreateShaderStorageBufferObjectsForParticles();
 
 	 m_Texture["OldPage"] = CreatePngTexture("./Resource/Texture/OldPage.png");
 	 m_Texture["BackPage"] = CreatePngTexture("./Resource/Texture/BackPage.png");
@@ -53,7 +55,7 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 void Renderer::CreateGeometryDataMeshes()
 {
 	//mPlaneMesh.BuildGeomData(50,50);
-	mMeshes["LightingCheckBoard"] = Mesh("LightingCheckBoard", std::string("./Resource/Model/LightingCheckBoard.obj"));
+	mMeshes["LightingCheckBoard"] = Mesh("LightingCheckBoard", std::string("./Resource/Model/LightingCheckBoard_smooth.obj"));
 }
 
 void Renderer::CreateVertexBufferObjects()
@@ -133,6 +135,50 @@ void Renderer::CreateFrameBufferObjects()
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_Texture["TexP1Depth"], 0);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+}
+
+void Renderer::CreateShaderStorageBufferObjectsForParticles()
+{
+	m_SSBO["ParticlePosition"] = 0;
+	m_SSBO["ParticleVelocity"] = 0;
+	m_SSBO["ParticleColor"] = 0;
+
+	glGenBuffers(1,&m_SSBO["ParticlePosition"]);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO["ParticlePosition"]);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, NUM_PARTICLES * sizeof(ParticlePosition), NULL, GL_STATIC_DRAW);
+
+	GLint bufMask = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT; // the invalidate makes a big difference when re-writing
+	ParticlePosition* points
+		= (ParticlePosition*)glMapBufferRange
+		(GL_SHADER_STORAGE_BUFFER, 0, 
+			NUM_PARTICLES * sizeof(ParticlePosition), bufMask);
+	for (int i = 0; i < NUM_PARTICLES; i++)
+	{
+		points[i].mPosition.x = RandomRangeFloat(-20.0f, 20.0f);
+		points[i].mPosition.y = RandomRangeFloat(-20.0f, 20.0f);
+		points[i].mPosition.z = RandomRangeFloat(-20.0f, 20.0f);
+		points[i].mPosition.w = 1;
+	}
+
+	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+
+	glGenBuffers(1, &m_SSBO["ParticleVelocity"]);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO["ParticleVelocity"]);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, NUM_PARTICLES * sizeof(ParticleVelocity), NULL, GL_STATIC_DRAW);
+
+	ParticleVelocity* vels
+		= (ParticleVelocity*)glMapBufferRange
+		(GL_SHADER_STORAGE_BUFFER, 0,
+			NUM_PARTICLES * sizeof(ParticleVelocity), bufMask);
+	for (int i = 0; i < NUM_PARTICLES; i++)
+	{
+		vels[i].mVelocity.x = RandomRangeFloat(-1.0f, 1.0f);
+		vels[i].mVelocity.y = RandomRangeFloat(-1.0f, 1.0f);
+		vels[i].mVelocity.z = RandomRangeFloat(-1.0f, 1.0f);
+		vels[i].mVelocity.w = 0;
+	}
+	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
 }
 
@@ -286,6 +332,60 @@ GLuint Renderer::CompileShaders(char* filenameVS, char* filenameFS)
 
 	return ShaderProgram;
 }
+
+GLuint Renderer::CompileComputeShaders(char* filenameCS)
+{
+	GLuint ShaderProgram = glCreateProgram(); //빈 쉐이더 프로그램 생성
+
+	if (ShaderProgram == 0) { //쉐이더 프로그램이 만들어졌는지 확인
+		fprintf(stderr, "Error creating shader program\n");
+	}
+
+	std::string cs;
+
+	//shader.vs 가 vs 안으로 로딩됨
+	if (!ReadFile(filenameCS, &cs)) {
+		printf("Error compiling compute shader\n");
+		return -1;
+	};
+
+	// ShaderProgram 에 cs.c_str() 컴퓨트 쉐이더를 컴파일한 결과를 attach함
+	AddShader(ShaderProgram, cs.c_str(), GL_COMPUTE_SHADER);
+
+	GLint Success = 0;
+	GLchar ErrorLog[1024] = { 0 };
+
+	//Attach 완료된 shaderProgram 을 링킹함
+	glLinkProgram(ShaderProgram);
+
+	//링크가 성공했는지 확인
+	glGetProgramiv(ShaderProgram, GL_LINK_STATUS, &Success);
+
+	if (Success == 0) {
+		// shader program 로그를 받아옴
+		glGetProgramInfoLog(ShaderProgram, sizeof(ErrorLog), NULL, ErrorLog);
+		std::cout << filenameCS << " Error linking shader program\n" << ErrorLog;
+		return -1;
+	}
+
+	glValidateProgram(ShaderProgram);
+	glGetProgramiv(ShaderProgram, GL_VALIDATE_STATUS, &Success);
+	if (!Success) {
+		glGetProgramInfoLog(ShaderProgram, sizeof(ErrorLog), NULL, ErrorLog);
+		std::cout << filenameCS << " Error validating shader program\n" << ErrorLog;
+		return -1;
+	}
+
+	glUseProgram(ShaderProgram);
+	std::cout << filenameCS << " Shader compiling is done.\n";
+
+	return ShaderProgram;
+}
+
+
+
+
+
 unsigned char * Renderer::loadBMPRaw(const char * imagepath, unsigned int& outWidth, unsigned int& outHeight)
 {
 	std::cout << "Loading bmp file " << imagepath << " ... " << std::endl;
@@ -507,7 +607,7 @@ void Renderer::DrawSolidMesh()
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO["LightingCheckBoard"]);
 	glLineWidth(2);
-	glPointSize(5);
+	
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_TRIANGLES);
 	glDrawElements(GL_TRIANGLES, mMeshes["LightingCheckBoard"].GetIndicesVector().size()*2, GL_UNSIGNED_INT, 0);
 
@@ -518,6 +618,41 @@ void Renderer::DrawSolidMesh()
 	glDisableVertexAttribArray(attribNormal);
 	glDisableVertexAttribArray(attribTexCoord);
 	glDisableVertexAttribArray(attribVertColor);
+
+	glDisable(GL_DEPTH_TEST);
+}
+
+void Renderer::SimulateParticle()
+{
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_SSBO["ParticlePosition"]);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, m_SSBO["ParticleVelocity"]);
+	//glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, m_SSBO["ParticleColor"]);
+
+	GLuint shader = m_Shaders["ParticleSimulate"];
+
+	glUseProgram(shader);
+	glDispatchCompute(NUM_PARTICLES / WORK_GROUP_SIZE, 1, 1);
+	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+}
+
+void Renderer::DrawParticle()
+{
+	GLuint shader = m_Shaders["BasicParticle"];
+	glUseProgram(shader);
+
+	GLuint projView = glGetUniformLocation(shader, "u_ProjView");
+	glUniformMatrix4fv(projView, 1, GL_FALSE, &mCamera.GetProjViewMatrix()[0][0]);
+	glPointSize(1);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_SSBO["ParticlePosition"]);
+	glVertexPointer(4, GL_FLOAT, 0, (void*)0);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glDrawArrays(GL_POINTS, 0, NUM_PARTICLES);
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	glDisable(GL_DEPTH_TEST);
 }

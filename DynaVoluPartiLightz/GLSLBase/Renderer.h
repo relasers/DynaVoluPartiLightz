@@ -8,6 +8,7 @@
 #include "Camera.h"
 #include "Transform.h"
 #include "Light.h"
+#include "Particle.h"
 
 #include "Dependencies\glew.h"
 #include "Dependencies\wglew.h"
@@ -31,6 +32,8 @@ public:
 	void DrawPlaneMesh();
 	void DrawSolidMesh();
 
+	void SimulateParticle();
+	void DrawParticle();
 
 	void DrawTexture(GLuint textureID, GLuint x, GLuint y, GLuint width, GLuint height);
 
@@ -45,10 +48,12 @@ private:
 	bool ReadFile(char* filename, std::string *target);
 	void AddShader(GLuint ShaderProgram, const char* pShaderText, GLenum ShaderType);
 	GLuint CompileShaders(char* filenameVS, char* filenameFS);
+	GLuint CompileComputeShaders(char* filenameCS);
 
 	void CreateGeometryDataMeshes();
 	void CreateVertexBufferObjects(); 
 	void CreateFrameBufferObjects();
+	void CreateShaderStorageBufferObjectsForParticles();
 	void CreateTextureDrawResource();
 	void CreateVBOandIBOfromPlaneMesh(PlaneMesh& mesh);
 	void CreateVBOandIBOofLoadedMeshes();
@@ -77,6 +82,8 @@ private:
 	std::unordered_map < std::string, GLuint > m_IBO;
 
 	std::unordered_map < std::string, GLuint > m_FBO;
+
+	std::unordered_map < std::string, GLuint > m_SSBO;
 	Camera mCamera;
 };
 

@@ -28,6 +28,9 @@
     <ClCompile Include="Renderer.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="Particle.cpp">
+      <Filter>Source\Particle</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -58,6 +61,12 @@
     <ClInclude Include="Renderer.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Particle.h">
+      <Filter>Source\Particle</Filter>
+    </ClInclude>
+    <ClInclude Include="MathUtility.h">
+      <Filter>Header</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\SolidRect.vert">
@@ -76,6 +85,15 @@
       <Filter>Shader</Filter>
     </None>
     <None Include="Shaders\SolidMesh.vert">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shaders\BasicParticle.frag">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shaders\BasicParticle.vert">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shaders\ParticleSimulate.comp">
       <Filter>Shader</Filter>
     </None>
   </ItemGroup>
@@ -109,6 +127,9 @@
     </Filter>
     <Filter Include="Source\Renderer">
       <UniqueIdentifier>{0c2b1d75-59e4-4b3b-9518-f6f3d8b64bc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Particle">
+      <UniqueIdentifier>{00bb750a-c2bc-43b2-a6d1-00007b169e35}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
