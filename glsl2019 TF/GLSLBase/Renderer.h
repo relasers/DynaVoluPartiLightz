@@ -11,6 +11,12 @@
 #include "Dependencies\glm/gtc/matrix_transform.hpp"
 #include "Dependencies\glm/gtx/euler_angles.hpp"
 
+struct vertexData {
+	glm::vec4 pos;
+	glm::vec2 uv;
+	glm::vec4 color;
+};
+
 class Renderer
 {
 public:
@@ -27,6 +33,8 @@ public:
 
 	void TransformFeedbackFunc();
 	void TransformFeedbackWithGSFunc();
+
+	void TBORenderingTest();
 
 private:
 	void Initialize(int windowSizeX, int windowSizeY);
@@ -52,6 +60,14 @@ private:
 
 	GLuint m_TFwithGSShader;
 	GLuint m_TFwithGSVBO{ 0 };
-	GLuint m_TFwithGSTBO{ 0 };
+	GLuint m_TFwithGSTBO[2]{ 0 };
+	GLuint m_TFwithCopyTBO[2]{ 0 };
+
+	GLuint m_TFwithTBOshader;
+	int m_Num = 0;
+	int m_NumTFB = 1;
+	bool m_isFirst = true;
+
+
 };
 

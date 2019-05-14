@@ -20,6 +20,8 @@ Renderer *g_Renderer = NULL;
 int g_WindowSizeX = 500;
 int g_WindowSizeY = 500;
 
+bool test = false;
+
 void RenderScene(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -27,14 +29,7 @@ void RenderScene(void)
 
 	// Renderer Test
 	g_Renderer->TransformFeedbackWithGSFunc();
-
-	GLfloat feedback[9];
-	glGetBufferSubData(GL_TRANSFORM_FEEDBACK_BUFFER,  0, sizeof(feedback), feedback);
-
-	for (int i = 0; i < 3; i += 3)
-	{
-		printf("%.2f, %.2f, %.2f \n", feedback[i], feedback[i + 1], feedback[i + 2]);
-	}
+	g_Renderer->TBORenderingTest();
 
 	glutSwapBuffers();
 }

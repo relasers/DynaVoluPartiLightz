@@ -50,6 +50,15 @@
     <None Include="Shaders\TFVertexShader.glvs">
       <Filter>Shader\TF</Filter>
     </None>
+    <None Include="Shaders\RenderToTBO.glfs">
+      <Filter>Shader\RenderingTBO</Filter>
+    </None>
+    <None Include="Shaders\RenderToTBO.glgs">
+      <Filter>Shader\RenderingTBO</Filter>
+    </None>
+    <None Include="Shaders\RenderToTBO.glvs">
+      <Filter>Shader\RenderingTBO</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -69,6 +78,9 @@
     </Filter>
     <Filter Include="Shader\TFwithGS">
       <UniqueIdentifier>{c8998c54-a5dc-43e0-af07-8db109786c30}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader\RenderingTBO">
+      <UniqueIdentifier>{155dfbe8-4853-4699-8a54-910d7439be9d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -17,7 +17,7 @@ Renderer::~Renderer()
 
 void Renderer::CreateTFVBO()
 {
-	float data[] = { 0.5f, 0.5f, 0.5f };
+	float data[] = { -0.5f, 0.5f, 0.5f };
 	//float data[] = { 1.0f, 2.0f, 3.0f };
 
 	// vbo
@@ -33,18 +33,22 @@ void Renderer::CreateTFVBO()
 
 void Renderer::CreateTFwithGSVBO()
 {
-	float data[] = { 0.5f, 0.5f, 0.5f };
+	vertexData data[1];
 
-	// vbo
-	glGenBuffers(1, &m_TFwithGSVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, m_TFwithGSVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
+	data[0].pos = glm::vec4(-0.5f, 0.5f, 0.5f, 0.5f);
+	data[0].uv = glm::vec2(0.0f, 0.0f);
+	data[0].color = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
 
 	// tbo
-	// GS에서 vertex를 입력 하나당 3개씩으로 증설하기 때문에 * 3
-	glGenBuffers(1, &m_TFwithGSTBO);
-	glBindBuffer(GL_ARRAY_BUFFER, m_TFwithGSTBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(data) * 3, nullptr, GL_STATIC_READ);
+	glGenTransformFeedbacks(2, m_TFwithGSTBO);
+	glGenBuffers(2, m_TFwithCopyTBO);
+
+	for (unsigned int i = 0; i < 2 ; i++) {
+        glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, m_TFwithGSTBO[i]);
+        glBindBuffer(GL_ARRAY_BUFFER, m_TFwithCopyTBO[i]);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), data, GL_DYNAMIC_DRAW);
+        glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, m_TFwithCopyTBO[i]);
+    }
 }
 
 void Renderer::Initialize(int windowSizeX, int windowSizeY)
@@ -56,6 +60,9 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 	//Load shaders
 	m_SolidRectShader = CompileShaders("./Shaders/SolidRect.vs", "./Shaders/SolidRect.fs");
 	
+	// Attach까지만 진행
+	m_TFwithGSShader = CompileShadersNoLink("./Shaders/TFWithGSVertexShader.glvs", "./Shaders/TFWithGSGeometryShader.glgs", "./Shaders/TFWithGSFragmentShader.glfs");
+
 	//Create VBOs
 	CreateVertexBufferObjects();
 }
@@ -216,6 +223,7 @@ GLuint Renderer::CompileShadersNoLink(char * filenameVS, char * filenameFS)
 
 	return ShaderProgram;
 }
+
 GLuint Renderer::CompileShadersNoLink(char * filenameVS, char * filenameGS, char * filenameFS)
 {
 	GLuint ShaderProgram = glCreateProgram(); //빈 쉐이더 프로그램 생성
@@ -246,7 +254,7 @@ GLuint Renderer::CompileShadersNoLink(char * filenameVS, char * filenameGS, char
 
 	// ShaderProgram 에 vs.c_str() 버텍스 쉐이더를 컴파일한 결과를 attach함
 	AddShader(ShaderProgram, vs.c_str(), GL_VERTEX_SHADER);
-	
+
 	// ShaderProgram 에 gs.c_str() 기하 쉐이더를 컴파일한 결과를 attach함
 	AddShader(ShaderProgram, gs.c_str(), GL_GEOMETRY_SHADER);
 
@@ -255,6 +263,7 @@ GLuint Renderer::CompileShadersNoLink(char * filenameVS, char * filenameGS, char
 
 	return ShaderProgram;
 }
+
 unsigned char * Renderer::loadBMPRaw(const char * imagepath, unsigned int& outWidth, unsigned int& outHeight)
 {
 	std::cout << "Loading bmp file " << imagepath << " ... " << std::endl;
@@ -429,40 +438,126 @@ void Renderer::TransformFeedbackFunc()
 
 void Renderer::TransformFeedbackWithGSFunc()
 {
-	// Attach까지만 진행
-	m_TFwithGSShader = CompileShadersNoLink("./Shaders/TFWithGSVertexShader.glvs", "./Shaders/TFWithGSGeometryShader.glgs", "./Shaders/TFWithGSFragmentShader.glfs");
+	GLuint shader = m_TFwithGSShader;
 
 	// transform feedback
-	const GLchar* feedbackVaryings[] = { "outValue" };
-	glTransformFeedbackVaryings(m_TFwithGSShader, 1, feedbackVaryings, GL_INTERLEAVED_ATTRIBS);
+	const GLchar* feedbackVaryings[] = { "outPos", "outUV", "outColor" };
+	glTransformFeedbackVaryings(shader, 3, feedbackVaryings, GL_INTERLEAVED_ATTRIBS);
 
 	// Link 진행
-	glLinkProgram(m_TFwithGSShader);
+	glLinkProgram(shader);
 
 	// Use
-	glUseProgram(m_TFwithGSShader);
+	glUseProgram(shader);
+
+	glEnable(GL_RASTERIZER_DISCARD);
 
 	// attribute or uniform
-	GLint attribPosition = glGetAttribLocation(m_TFwithGSShader, "a_Position");
+	GLint attribPosition = glGetAttribLocation(shader, "a_Position");
+	GLint aUV = glGetAttribLocation(shader, "a_UV");
+	GLint aColor = glGetAttribLocation(shader, "a_Color");
+	
+	glBindBuffer(GL_ARRAY_BUFFER, m_TFwithCopyTBO[m_Num]);
+	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, m_TFwithGSTBO[m_NumTFB]);
+
 	glEnableVertexAttribArray(attribPosition);
-	glBindBuffer(GL_ARRAY_BUFFER, m_TFwithGSVBO);
-	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+	glEnableVertexAttribArray(aUV);
+	glEnableVertexAttribArray(aColor);
+
+	glVertexAttribPointer(attribPosition, 4, GL_FLOAT, GL_FALSE, sizeof(vertexData), 0);
+	glVertexAttribPointer(aUV, 2, GL_FLOAT, GL_FALSE, sizeof(vertexData), (GLvoid*)(sizeof(float) * 4));
+	glVertexAttribPointer(aColor, 4, GL_FLOAT, GL_FALSE, sizeof(vertexData), (GLvoid*)(sizeof(float) * 6));
 
 	// Rasterazer
-	//glEnable(GL_RASTERIZER_DISCARD);
+	glBeginTransformFeedback(GL_POINTS);
+	
+	if (m_isFirst) {
+		glDrawArrays(GL_POINTS, 0, 1);
+		m_isFirst = false;
+	}
+	else {
+		glDrawTransformFeedback(GL_POINTS, m_TFwithGSTBO[m_Num]);
+	}
 
-	// glBindBufferBase
-	// tbo 버퍼를 피드백 버퍼로 실제로 바인드 하기 위한 함수
-	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, m_TFwithGSTBO);
+	glEndTransformFeedback();
+
+	glDisableVertexAttribArray(attribPosition);
+	glDisableVertexAttribArray(aUV);
+	glDisableVertexAttribArray(aColor);
+
+	//vertexData feedback[1];
+	//glGetBufferSubData(GL_TRANSFORM_FEEDBACK_BUFFER, 0, sizeof(feedback), feedback);
+	//
+	//for (int i = 0; i < 1; ++i)
+	//{
+	//	printf("Vertex Pos   %d : %.2f, %.2f, %.2f, %.2f \n", i, feedback[i].pos.x, feedback[i].pos.y, feedback[i].pos.z, feedback[i].pos.w);
+	//	printf("Vertex UV    %d : %.2f, %.2f \n", i, feedback[i].uv.x, feedback[i].uv.y);
+	//	printf("Vertex Color %d : %.2f, %.2f, %.2f, %.2f \n", i, feedback[i].color.x, feedback[i].color.y, feedback[i].color.z, feedback[i].color.w);
+	//}
+}
+
+void Renderer::TBORenderingTest()
+{
+	GLuint shader = m_TFwithGSShader;
+
+	/*
+	// Attach까지만 진행
+	m_TFwithGSShader = CompileShadersNoLink("./Shaders/RenderToTBO.glvs", "./Shaders/RenderToTBO.glgs", "./Shaders/RenderToTBO.glfs");
+
+	// transform feedback
+	const GLchar* feedbackVaryings[] = { "outPos", "outUV", "outColor" };
+	glTransformFeedbackVaryings(m_TFwithGSShader, 3, feedbackVaryings, GL_INTERLEAVED_ATTRIBS);
+
+	// Link 진행
+	glLinkProgram(m_TFwithTBOshader);
+
+	GLuint shader = m_TFwithTBOshader;
+
+	glUseProgram(shader);
+
+	GLint attribPosition = glGetAttribLocation(shader, "a_Position");
+	GLint aUV = glGetAttribLocation(shader, "a_UV");
+	GLint aColor = glGetAttribLocation(shader, "a_Color");
+
+	glEnableVertexAttribArray(attribPosition);
+	glEnableVertexAttribArray(aUV);
+	glEnableVertexAttribArray(aColor);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_TFwithGSTBO[m_Num % 2]);
+
+	glVertexAttribPointer(attribPosition, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 10, 0);
+	glVertexAttribPointer(aUV, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 10, (GLvoid*)(sizeof(float) * 4));
+	glVertexAttribPointer(aColor, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 10, (GLvoid*)(sizeof(float) * 6));
+
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 1, m_TFwithGSTBO[++m_Num % 2]);
 
 	glBeginTransformFeedback(GL_POINTS);
 	glDrawArrays(GL_POINTS, 0, 1);
-
-	glPointSize(5);
-
 	glEndTransformFeedback();
-	//glFlush();
-	//glDisable(GL_RASTERIZER_DISCARD);
+	*/
+	glDisable(GL_RASTERIZER_DISCARD);
 
-	
+	GLint attribPosition = glGetAttribLocation(shader, "a_Position");
+	GLint aUV = glGetAttribLocation(shader, "a_UV");
+	GLint aColor = glGetAttribLocation(shader, "a_Color");
+
+	glEnableVertexAttribArray(attribPosition);
+	glEnableVertexAttribArray(aUV);
+	glEnableVertexAttribArray(aColor);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_TFwithCopyTBO[m_NumTFB]);
+
+	glVertexAttribPointer(attribPosition, 4, GL_FLOAT, GL_FALSE, sizeof(vertexData), 0);
+	glVertexAttribPointer(aUV, 2, GL_FLOAT, GL_FALSE, sizeof(vertexData), (GLvoid*)(sizeof(float) * 4));
+	glVertexAttribPointer(aColor, 4, GL_FLOAT, GL_FALSE, sizeof(vertexData), (GLvoid*)(sizeof(float) * 6));
+
+	glDrawTransformFeedback(GL_POINTS, m_TFwithGSTBO[m_NumTFB]);
+
+	glDisableVertexAttribArray(attribPosition);
+	glDisableVertexAttribArray(aUV);
+	glDisableVertexAttribArray(aColor);
+
+	m_Num = m_NumTFB;
+	m_NumTFB = (m_NumTFB + 1) & 0x1;
+
 }

@@ -173,6 +173,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shaders\RenderToTBO.glfs" />
+    <None Include="Shaders\RenderToTBO.glgs" />
+    <None Include="Shaders\RenderToTBO.glvs" />
     <None Include="Shaders\SolidRect.fs" />
     <None Include="Shaders\SolidRect.vs" />
     <None Include="Shaders\TFFragmentShader.glfs" />
