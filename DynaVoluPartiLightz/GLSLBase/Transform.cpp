@@ -3,6 +3,7 @@
 
 Transform::Transform()
 {
+	Update();
 }
 
 Transform::~Transform()
@@ -26,8 +27,10 @@ Transform & Transform::operator=(const Transform & _Transform)
 void Transform::UpdateMatrix()
 {
 	glm::mat4 m4Trans = glm::translate(glm::mat4(1.f), mPosition);
-	glm::mat4 m4Rot = glm::eulerAngleXYZ(mEulerAngle.x, mEulerAngle.y, mEulerAngle.z);
-	glm::mat4 m4Scale = glm::scale(glm::mat4(1.f), mScale);
+	mQuaternion = glm::quat(mEulerAngle);
+	glm::mat4 m4Rot = glm::toMat4(mQuaternion);
+
+	glm::mat4 m4Scale = glm::scale(glm::mat4(50.f), mScale);
 
 	m_m4Model = m4Trans * m4Rot * m4Scale;
 }

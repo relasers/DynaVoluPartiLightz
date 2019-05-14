@@ -43,16 +43,10 @@ void RenderScene(void)
 	// Renderer Test
 	//g_Renderer->Test();
 	//g_Renderer->DrawPlaneMesh();
-	//g_Renderer->PageFlipCase01(theta);
-	//g_Renderer->PageFlipCase01Tex(curr_theta, LinePivot, LinePivotTheta);
 	g_Renderer->SetFrameBuffer();
-
 	g_Renderer->DrawSolidMesh();
-	//g_Renderer->PageFlipCase02(curr_theta, AxisPivot, AxisPivotTheta);
 	g_Renderer->ResetFrameBuffer();
-
-	g_Renderer->DrawTexture(g_Renderer->GetTextureID("OldPage"), 0, 0, 200, 200);
-	//g_Renderer->PageFlipCase02_temp(curr_theta, AxisPivot, AxisPivotTheta);
+	//g_Renderer->DrawTexture(g_Renderer->GetTextureID("OldPage"), 0, 0, 200, 200);
 	glutSwapBuffers();
 }
 

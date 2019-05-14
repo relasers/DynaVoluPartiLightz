@@ -43,12 +43,17 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 	 m_Texture["BackPage"] = CreatePngTexture("./Resource/Texture/BackPage.png");
 	 m_Texture["Leather"] = CreatePngTexture("./Resource/Texture/Leather.png");
 
+	 mMainDirectionalLight.mLightColor = glm::vec4(255.f, 244.f,214.f,255.f);
+	 mMainDirectionalLight.mLightColor /= 255.f;
+
+	 mMainDirectionalLight.mDirection = glm::normalize(glm::vec3(50,-30,0));
+
 }
 
 void Renderer::CreateGeometryDataMeshes()
 {
-	mPlaneMesh.BuildGeomData(50,50);
-	
+	//mPlaneMesh.BuildGeomData(50,50);
+	mMeshes["LightingCheckBoard"] = Mesh("LightingCheckBoard", std::string("./Resource/Model/LightingCheckBoard.obj"));
 }
 
 void Renderer::CreateVertexBufferObjects()
@@ -65,7 +70,8 @@ void Renderer::CreateVertexBufferObjects()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(rect), rect, GL_STATIC_DRAW);
 
 	
-	CreateVBOandIBOfromPlaneMesh(mPlaneMesh);
+	//CreateVBOandIBOfromPlaneMesh(mPlaneMesh);
+	CreateVBOandIBOofLoadedMeshes();
 	CreateTextureDrawResource();
 }
 
@@ -136,8 +142,6 @@ void Renderer::CreateVBOandIBOfromPlaneMesh(PlaneMesh& mesh)
 	GLuint VBO;
 	GLuint IBO;
 
-
-
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, mesh.GetVerticesData().size() * sizeof(float), &mesh.GetVerticesData()[0], GL_STATIC_DRAW);
@@ -148,7 +152,27 @@ void Renderer::CreateVBOandIBOfromPlaneMesh(PlaneMesh& mesh)
 
 	m_VBO["Plane"] = VBO;
 	m_IBO["Plane"] = IBO;
+}
 
+void Renderer::CreateVBOandIBOofLoadedMeshes()
+{
+	for (auto& p : mMeshes)
+	{
+		GLuint VBO;
+		GLuint IBO;
+
+		glGenBuffers(1, &VBO);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, p.second.GetVerticesData().size() * sizeof(float), &p.second.GetVerticesData().at(0), GL_STATIC_DRAW);
+
+		glGenBuffers(1, &IBO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, p.second.GetIndicesVector().size() * sizeof(unsigned int), &p.second.GetIndicesVector().at(0), GL_STATIC_DRAW);
+
+
+		m_VBO[p.first] = VBO;
+		m_IBO[p.first] = IBO;
+	}
 }
 
 
@@ -437,9 +461,11 @@ void Renderer::DrawPlaneMesh()
 
 void Renderer::DrawSolidMesh()
 {
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+
 	GLuint shader = m_Shaders["SolidMesh"];
 	glUseProgram(shader);
-
 	int attribPosition = glGetAttribLocation(shader, "a_Position");
 	int attribNormal = glGetAttribLocation(shader, "a_Normal");
 	int attribTexCoord = glGetAttribLocation(shader, "a_TexCoord");
@@ -447,16 +473,31 @@ void Renderer::DrawSolidMesh()
 
 	GLuint projView = glGetUniformLocation(shader, "u_ProjView");
 	GLuint model = glGetUniformLocation(shader, "u_Model");
+	GLuint cameraPos = glGetUniformLocation(shader, "u_CameraPos");
+	GLuint mainDirLight_Color = glGetUniformLocation(shader, "dirLight.mLightColor");
+	GLuint mainDirLight_Dir = glGetUniformLocation(shader, "dirLight.mDirection");
+
 
 	glUniformMatrix4fv(projView, 1, GL_FALSE, &mCamera.GetProjViewMatrix()[0][0]);
 	glUniformMatrix4fv(model, 1, GL_FALSE, &mPlaneTransform.GetModelMatrix()[0][0]);
+
+	glUniform3f(cameraPos, mCamera.GetCameraPos().x,
+		 mCamera.GetCameraPos().y,
+		 mCamera.GetCameraPos().z);
+	glUniform4f(mainDirLight_Color, mMainDirectionalLight.mLightColor.x,
+		mMainDirectionalLight.mLightColor.y,
+		mMainDirectionalLight.mLightColor.z,
+		mMainDirectionalLight.mLightColor.w);
+	glUniform3f(mainDirLight_Dir, mMainDirectionalLight.mDirection.x,
+		mMainDirectionalLight.mDirection.y, 
+		mMainDirectionalLight.mDirection.z);
 
 	glEnableVertexAttribArray(attribPosition);
 	glEnableVertexAttribArray(attribNormal);
 	glEnableVertexAttribArray(attribTexCoord);
 	glEnableVertexAttribArray(attribVertColor);
 
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBO["Plane"]);
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBO["LightingCheckBoard"]);
 
 	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 14, 0);
 	glVertexAttribPointer(attribNormal, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 14, (GLvoid*)(sizeof(float) * 3));
@@ -464,246 +505,21 @@ void Renderer::DrawSolidMesh()
 	glVertexAttribPointer(attribVertColor, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 14, (GLvoid*)(sizeof(float) * 10));
 
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO["Plane"]);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO["LightingCheckBoard"]);
 	glLineWidth(2);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_TRIANGLES);
-	glDrawElements(GL_TRIANGLES, mPlaneMesh.GetIndicesVector().size(), GL_UNSIGNED_INT, 0);
+	glPointSize(5);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_TRIANGLES);
+	glDrawElements(GL_TRIANGLES, mMeshes["LightingCheckBoard"].GetIndicesVector().size()*2, GL_UNSIGNED_INT, 0);
 
-	//std::cout << "|" << m_VBO["Plane"] << " " << m_IBO["Plane"] << std::endl;
+	//std::cout << "|" << m_VBO["LightingCheckBoard"] << " " << m_IBO["LightingCheckBoard"] << std::endl;
+	//std::cout << mMeshes["LightingCheckBoard"].GetIndicesVector().size() << std::endl;
 
 	glDisableVertexAttribArray(attribPosition);
 	glDisableVertexAttribArray(attribNormal);
 	glDisableVertexAttribArray(attribTexCoord);
 	glDisableVertexAttribArray(attribVertColor);
-}
-
-void Renderer::PageFlipCase01(float _theta)
-{
-	GLuint shader = m_Shaders["PageFlipBasic"];
-	glUseProgram(shader);
-
-
-	int attribPosition = glGetAttribLocation(shader, "a_Position");
-	int attribTexCoord = glGetAttribLocation(shader, "a_TexCoord");
-	int attribVertColor = glGetAttribLocation(shader, "a_VertColor");
-
-	GLuint projView = glGetUniformLocation(shader, "u_ProjView");
-	GLuint model = glGetUniformLocation(shader, "u_Model");
-	GLuint theta = glGetUniformLocation(shader,"u_Theta");
-
-	glUniformMatrix4fv(projView, 1, GL_FALSE, &mCamera.GetProjViewMatrix()[0][0]);
-	glUniformMatrix4fv(model, 1, GL_FALSE, &mPlaneTransform.GetModelMatrix()[0][0]);
-	glUniform1f(theta,_theta );
-
-	glEnableVertexAttribArray(attribPosition);
-	glEnableVertexAttribArray(attribTexCoord);
-	glEnableVertexAttribArray(attribVertColor);
-
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBO["Plane"]);
-
-	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 11, 0);
-	glVertexAttribPointer(attribTexCoord, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 11, (GLvoid*)(sizeof(float) * 3));
-	glVertexAttribPointer(attribVertColor, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 11, (GLvoid*)(sizeof(float) * 7));
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO["Plane"]);
-	glLineWidth(2);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glDrawElements(GL_TRIANGLE_STRIP, mPlaneMesh.GetIndicesVector().size(), GL_UNSIGNED_INT, 0);
-	//std::cout << "|" << m_VBO["Plane"] << " " << m_IBO["Plane"] << std::endl;
-
-	glDisableVertexAttribArray(attribPosition);
-	glDisableVertexAttribArray(attribTexCoord);
-	glDisableVertexAttribArray(attribVertColor);
-}
-
-void Renderer::PageFlipCase01Tex(float _theta, glm::vec2 _PivotPos, float _PivotLineTheta)
-{
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-
-	GLuint shader = m_Shaders["PageFlipBasicTex"];
-	glUseProgram(shader);
-
-	GLuint gTextureFront = glGetUniformLocation(shader, "u_TextureFront");
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_Texture["OldPage"]);
-	// f ¾²¸é ¸ÁÇÔ 
-	glUniform1i(gTextureFront, 0);
-	
-	GLuint gTextureBack = glGetUniformLocation(shader, "u_TextureBack");
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, m_Texture["BackPage"]);
-	glUniform1i(gTextureBack, 1);
-
-	GLuint gLinePivot = glGetUniformLocation(shader, "u_LinePivot");
-	GLuint gLinePivotTheta = glGetUniformLocation(shader, "u_FlipTheta");
-
-	int attribPosition = glGetAttribLocation(shader, "a_Position");
-	int attribTexCoord = glGetAttribLocation(shader, "a_TexCoord");
-	int attribVertColor = glGetAttribLocation(shader, "a_VertColor");
-
-	GLuint projView = glGetUniformLocation(shader, "u_ProjView");
-	GLuint model = glGetUniformLocation(shader, "u_Model");
-	GLuint theta = glGetUniformLocation(shader, "u_Theta");
-
-	glUniformMatrix4fv(projView, 1, GL_FALSE, &mCamera.GetProjViewMatrix()[0][0]);
-	glUniformMatrix4fv(model, 1, GL_FALSE, &mPlaneTransform.GetModelMatrix()[0][0]);
-	glUniform1f(theta, _theta);
-	
-	glUniform2f(gLinePivot, _PivotPos.x, _PivotPos.y);
-	glUniform1f(gLinePivotTheta, _PivotLineTheta);
-
-	glEnableVertexAttribArray(attribPosition);
-	glEnableVertexAttribArray(attribTexCoord);
-	glEnableVertexAttribArray(attribVertColor);
-
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBO["Plane"]);
-
-	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 11, 0);
-	glVertexAttribPointer(attribTexCoord, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 11, (GLvoid*)(sizeof(float) * 3));
-	glVertexAttribPointer(attribVertColor, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 11, (GLvoid*)(sizeof(float) * 7));
-
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO["Plane"]);
-	glLineWidth(2);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glDrawElements(GL_TRIANGLES, mPlaneMesh.GetIndicesVector().size(), GL_UNSIGNED_INT, 0);
-	//std::cout << "|" << m_VBO["Plane"] << " " << m_IBO["Plane"] << std::endl;
-
-	glDisableVertexAttribArray(attribPosition);
-	glDisableVertexAttribArray(attribTexCoord);
-	glDisableVertexAttribArray(attribVertColor);
 
 	glDisable(GL_DEPTH_TEST);
-}
-
-void Renderer::PageFlipCase02(float _delta, glm::vec2 _PivotPos, float _PivotLineTheta)
-{
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-
-	GLuint shader = m_Shaders["PageFlipRoller"];
-	glUseProgram(shader);
-
-	GLuint gTextureFront = glGetUniformLocation(shader, "u_TextureFront");
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_Texture["OldPage"]);
-	// f ¾²¸é ¸ÁÇÔ 
-	glUniform1i(gTextureFront, 0);
-
-	GLuint gTextureBack = glGetUniformLocation(shader, "u_TextureBack");
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, m_Texture["BackPage"]);
-	glUniform1i(gTextureBack, 1);
-
-	GLuint gAxisPivot = glGetUniformLocation(shader, "u_AxisPivot");
-	GLuint gLinePivotTheta = glGetUniformLocation(shader, "u_FlipTheta");
-	GLuint gLinePaperRadius = glGetUniformLocation(shader, "u_PaperRadius");
-
-	int attribPosition = glGetAttribLocation(shader, "a_Position");
-	int attribTexCoord = glGetAttribLocation(shader, "a_TexCoord");
-	int attribVertColor = glGetAttribLocation(shader, "a_VertColor");
-
-	GLuint projView = glGetUniformLocation(shader, "u_ProjView");
-	GLuint model = glGetUniformLocation(shader, "u_Model");
-	GLuint delta = glGetUniformLocation(shader, "u_Delta");
-
-	glUniformMatrix4fv(projView, 1, GL_FALSE, &mCamera.GetProjViewMatrix()[0][0]);
-	glUniformMatrix4fv(model, 1, GL_FALSE, &mPlaneTransform.GetModelMatrix()[0][0]);
-	glUniform1f(delta, _delta);
-
-
-
-	glUniform2f(gAxisPivot, _PivotPos.x, _PivotPos.y);
-	glUniform1f(gLinePivotTheta, _PivotLineTheta);
-
-	glEnableVertexAttribArray(attribPosition);
-	glEnableVertexAttribArray(attribTexCoord);
-	glEnableVertexAttribArray(attribVertColor);
-
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBO["Plane"]);
-
-	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 11, 0);
-	glVertexAttribPointer(attribTexCoord, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 11, (GLvoid*)(sizeof(float) * 3));
-	glVertexAttribPointer(attribVertColor, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 11, (GLvoid*)(sizeof(float) * 7));
-	glUniform1f(gLinePaperRadius,1.0f);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO["Plane"]);
-	glLineWidth(2);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glDrawElements(GL_TRIANGLES, mPlaneMesh.GetIndicesVector().size(), GL_UNSIGNED_INT, 0);
-	//std::cout << "|" << m_VBO["Plane"] << " " << m_IBO["Plane"] << std::endl;
-
-	glDisableVertexAttribArray(attribPosition);
-	glDisableVertexAttribArray(attribTexCoord);
-	glDisableVertexAttribArray(attribVertColor);
-
-	glDisable(GL_DEPTH_TEST);
-}
-
-void Renderer::PageFlipCase02_temp(float _delta, glm::vec2 _PivotPos, float _PivotLineTheta)
-{
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-
-	GLuint shader = m_Shaders["PageFlipRollerTemp"];
-	glUseProgram(shader);
-
-	GLuint gTextureFront = glGetUniformLocation(shader, "u_TextureFront");
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_Texture["OldPage"]);
-	// f ¾²¸é ¸ÁÇÔ 
-	glUniform1i(gTextureFront, 0);
-
-	GLuint gTextureBack = glGetUniformLocation(shader, "u_TextureBack");
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, m_Texture["BackPage"]);
-	glUniform1i(gTextureBack, 1);
-
-	GLuint gAxisPivot = glGetUniformLocation(shader, "u_AxisPivot");
-	GLuint gLinePivotTheta = glGetUniformLocation(shader, "u_FlipTheta");
-	GLuint gLinePaperRadius = glGetUniformLocation(shader, "u_PaperRadius");
-
-	int attribPosition = glGetAttribLocation(shader, "a_Position");
-	int attribTexCoord = glGetAttribLocation(shader, "a_TexCoord");
-	int attribVertColor = glGetAttribLocation(shader, "a_VertColor");
-
-	GLuint projView = glGetUniformLocation(shader, "u_ProjView");
-	GLuint model = glGetUniformLocation(shader, "u_Model");
-	GLuint delta = glGetUniformLocation(shader, "u_Delta");
-
-	glUniformMatrix4fv(projView, 1, GL_FALSE, &mCamera.GetProjViewMatrix()[0][0]);
-	glUniformMatrix4fv(model, 1, GL_FALSE, &mPlaneTransform.GetModelMatrix()[0][0]);
-	glUniform1f(delta, _delta);
-
-
-
-	glUniform2f(gAxisPivot, _PivotPos.x, _PivotPos.y);
-	glUniform1f(gLinePivotTheta, _PivotLineTheta);
-
-	glEnableVertexAttribArray(attribPosition);
-	glEnableVertexAttribArray(attribTexCoord);
-	glEnableVertexAttribArray(attribVertColor);
-
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBO["Plane"]);
-
-	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 11, 0);
-	glVertexAttribPointer(attribTexCoord, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 11, (GLvoid*)(sizeof(float) * 3));
-	glVertexAttribPointer(attribVertColor, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 11, (GLvoid*)(sizeof(float) * 7));
-	glUniform1f(gLinePaperRadius, 1.0f);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO["Plane"]);
-	glLineWidth(2);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glDrawElements(GL_TRIANGLES, mPlaneMesh.GetIndicesVector().size(), GL_UNSIGNED_INT, 0);
-	//std::cout << "|" << m_VBO["Plane"] << " " << m_IBO["Plane"] << std::endl;
-
-	glDisableVertexAttribArray(attribPosition);
-	glDisableVertexAttribArray(attribTexCoord);
-	glDisableVertexAttribArray(attribVertColor);
-
-	glDisable(GL_DEPTH_TEST);
-
 }
 
 

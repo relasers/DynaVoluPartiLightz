@@ -1,7 +1,7 @@
 #pragma once
 class Vertex
 {
-private:
+public:
 	glm::vec3 mPosition;
 	glm::vec3 mNormal;
 	glm::vec4 mTexcoord0;
@@ -31,7 +31,10 @@ public:
 	glm::vec4 GetTexCoord() { return mTexcoord0; }
 	glm::vec4 GetVertexColor() { return mVertexColor; }
 	
+	void SetPosition(glm::vec3 _Position) { mPosition = _Position; }
+	void SetTexCoord0(glm::vec4 _TexCoord0) { mTexcoord0 = _TexCoord0; }
 	void SetNormal(glm::vec3 _Normal) { mNormal = _Normal; }
+	void SetVertexColor(glm::vec4 _Color) { mVertexColor = _Color; }
 
 private:
 
