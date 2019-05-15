@@ -82,7 +82,7 @@ void Camera::Rotate(const glm::vec3& vAxis, float fAngle)
 
 void Camera::KeyInput(unsigned char key, int x, int y)
 {
-	static const float weight = 0.1f;
+	static const float weight = 0.25f;
 	switch (key) {
 	case 'w': case 'W':
 		mCameraPos += mCameraLookDir * weight;
@@ -127,7 +127,6 @@ void Camera::MouseInput(int x, int y, int button, int state)
 		break;
 	case -1:
 		if (true == bMouseDown) {
-			std::cout << "Rotate" << std::endl;
 			static const float weight = 0.1f;
 			int dx = x - prev_x;
 			int dy = y - prev_y;

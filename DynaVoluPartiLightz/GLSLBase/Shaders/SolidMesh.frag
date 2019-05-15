@@ -47,7 +47,7 @@ vec3 CalcDirLight(DirectionalLight light, vec3 normal, vec3 viewDir)
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
     // combine results
-    return (diff + spec);
+    return vec3(diff + spec);
 }
 
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
@@ -65,7 +65,7 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     diff *= attenuation;
     spec *= attenuation;
 
-   return (diff + spec);
+   return vec3(diff + spec);
 }
 
 

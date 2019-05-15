@@ -15,11 +15,12 @@ layout( std140, binding= 6 ) buffer ParticleColor
 	vec4 Colors[];
 };
 
+
 layout( local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
 void main()
 {
 	const vec3 G = vec3( 0., -9.8, 0. );
-	const float DT = 0.001;
+	const float DT = 0.0125;
 
 	uint gid = gl_GlobalInvocationID.x; // the .y and .z are both 1 in this case
 	vec3 p = Positions[ gid ].xyz;

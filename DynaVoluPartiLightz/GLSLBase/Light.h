@@ -42,6 +42,8 @@ struct PointLight_p
 	float mPadding;
 };
 
+
+
 struct DirectionalLight
 {
 	glm::float4 mLightColor;
