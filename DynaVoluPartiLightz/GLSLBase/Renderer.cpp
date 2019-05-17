@@ -55,7 +55,8 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 void Renderer::CreateGeometryDataMeshes()
 {
 	//mPlaneMesh.BuildGeomData(50,50);
-	mMeshes["LightingCheckBoard"] = Mesh("LightingCheckBoard", std::string("./Resource/Model/LightingCheckBoard_smooth.obj"));
+	//mMeshes["LightingCheckBoard"] = Mesh("LightingCheckBoard", std::string("./Resource/Model/LightingCheckBoard_smooth.obj"));
+	mMeshes["LightingCheckBoard"] = Mesh("LightingCheckBoard", std::string("./Resource/Model/LightingCheckBoard.fbx"));
 }
 
 void Renderer::CreateVertexBufferObjects()
