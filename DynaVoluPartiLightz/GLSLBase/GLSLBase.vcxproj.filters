@@ -72,6 +72,9 @@
     <ClInclude Include="GameObject.h">
       <Filter>Source\GameObject</Filter>
     </ClInclude>
+    <ClInclude Include="DefineValue.h">
+      <Filter>Header</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\SolidRect.vert">

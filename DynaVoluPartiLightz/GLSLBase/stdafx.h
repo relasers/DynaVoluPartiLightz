@@ -33,6 +33,7 @@
 
 #pragma comment(lib, "assimp.lib")
 
+#include "DefineValue.h"
 #include "MathUtility.h"
 
 // 1UNIT = 100

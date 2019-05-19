@@ -81,7 +81,7 @@ in vec3 v_viewDir;
 void main()
 {
 	//FragColor = v_Color;
-	FragColor = vec4(0.0f,0.0f,0.0f,1.0f);
+	FragColor = vec4(0.2f,0.2f,0.2f,1.0f);
 	FragColor.xyz *= CalcDirLight(dirLight,v_Normal,v_viewDir);
 	//FragColor.x = v_WorldPosition.x/100.0f;
 	//FragColor = vec4(1,1,1,1);

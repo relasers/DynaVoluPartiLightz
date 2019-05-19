@@ -41,6 +41,8 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 	// Create SSBO for Particles
 	CreateShaderStorageBufferObjectsForParticles();
 
+	CreateParticleLightTextureData();
+
 	 m_Texture["OldPage"] = CreatePngTexture("./Resource/Texture/OldPage.png");
 	 m_Texture["BackPage"] = CreatePngTexture("./Resource/Texture/BackPage.png");
 	 m_Texture["Leather"] = CreatePngTexture("./Resource/Texture/Leather.png");
@@ -117,6 +119,8 @@ void Renderer::CreateFrameBufferObjects()
 	m_Texture["TexP1Depth"] = 0;
 	m_FBO["FrameBufferP1"] = 0;
 
+	m_Texture["WorldParticleLightIntensity"] = 0;
+
 	glGenTextures(1, &m_Texture["TexP1"]);
 	glBindTexture(GL_TEXTURE_2D, m_Texture["TexP1"]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -160,7 +164,7 @@ void Renderer::CreateShaderStorageBufferObjectsForParticles()
 	for (int i = 0; i < NUM_PARTICLES; i++)
 	{
 		points[i].mPosition.x = RandomRangeFloat(0.0f, 100.0f);
-		points[i].mPosition.y = RandomRangeFloat(0.0f, 100.0f);
+		points[i].mPosition.y = RandomRangeFloat(0.0f, 20.0f);
 		points[i].mPosition.z = RandomRangeFloat(0.0f, 100.0f);
 		points[i].mPosition.w = 1;
 	}
@@ -230,8 +234,27 @@ void Renderer::CreateSceneObjects()
 	GameObject MainGeom;
 	mGameObjects["MainGeom"] = MainGeom;
 	mGameObjects["MainGeom"].SetMesh(mMeshes["LightingCheckBoard"].get());
-	mGameObjects["MainGeom"].SetPosition(glm::vec3(50,50,50));
+	mGameObjects["MainGeom"].SetPosition(glm::vec3(50,0,50));
 	mGameObjects["MainGeom"].SetScale(glm::vec3(1,1,1));
+}
+
+void Renderer::CreateParticleLightTextureData()
+{
+	mWorldParticleTexture["WorldParticleIntensity"] = 0;
+
+	glGenTextures(1, &mWorldParticleTexture["WorldParticleIntensity"]);
+	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleIntensity"]);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	// 이때는 메모리 할당만 시행한다.
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8, WORLD_SIZE, WORLD_SIZE, WORLD_SIZE, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+	glGenFramebuffers(1, &m_FBO["WorldParticleIntensity"]);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_Texture["Intensity"], 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 }
 
 
@@ -651,6 +674,12 @@ void Renderer::SimulateParticle()
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 
+void Renderer::UpdateWorldParticleTextures()
+{
+
+
+}
+
 void Renderer::DrawParticle()
 {
 	GLuint shader = m_Shaders["BasicParticle"];
@@ -661,7 +690,7 @@ void Renderer::DrawParticle()
 
 	GLuint projView = glGetUniformLocation(shader, "u_ProjView");
 	glUniformMatrix4fv(projView, 1, GL_FALSE, &mCamera.GetProjViewMatrix()[0][0]);
-	glPointSize(1);
+	glPointSize(2);
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_SSBO["ParticlePosition"]);
 	glVertexPointer(4, GL_FLOAT, 0, (void*)0);

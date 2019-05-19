@@ -33,6 +33,7 @@ public:
 	void DrawSolidMesh();
 
 	void SimulateParticle();
+	void UpdateWorldParticleTextures();
 	void DrawParticle();
 
 	void DrawTexture(GLuint textureID, GLuint x, GLuint y, GLuint width, GLuint height);
@@ -61,6 +62,7 @@ private:
 	void CreateVBOandIBOofLoadedMeshes();
 	void CreateSceneObjects();
 
+	void CreateParticleLightTextureData();
 
 	unsigned char * Renderer::loadBMPRaw(const char * imagepath, unsigned int& outWidth, unsigned int& outHeight);
 
@@ -74,6 +76,8 @@ private:
 	std::unordered_map < std::string, GLuint > m_Shaders;
 	std::unordered_map < std::string, GLuint > m_Texture;
 
+	std::unordered_map < std::string, GLuint > mWorldParticleTexture;
+	
 	PlaneMesh mPlaneMesh;
 	DirectionalLight mMainDirectionalLight;
 
