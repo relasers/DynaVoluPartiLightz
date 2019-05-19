@@ -6,7 +6,7 @@ protected:
 	std::string mName;
 	std::vector<Vertex> mVertices;
 
-	std::vector<float> mVerticesData;
+	//std::vector<float> mVerticesData;
 	std::vector<unsigned int> mIndices;
 
 	unsigned int mNumVertices;
@@ -29,7 +29,7 @@ public:
 	}
 
 	std::vector<Vertex> GetVerticesVector() { return mVertices; }
-	std::vector<float> GetVerticesData() { return mVerticesData; }
+	//std::vector<float> GetVerticesData() { return mVerticesData; }
 	std::vector<unsigned int> GetIndicesVector() { return mIndices; }
 	std::string GetName() const { return mName; }
 	unsigned int GetNumVertices() const { return mNumVertices; }

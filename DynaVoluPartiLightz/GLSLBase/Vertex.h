@@ -1,7 +1,7 @@
 #pragma once
 class Vertex
 {
-public:
+private:
 	glm::vec3 mPosition;
 	glm::vec3 mNormal;
 	glm::vec4 mTexcoord0;

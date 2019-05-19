@@ -198,7 +198,7 @@ void Renderer::CreateVBOandIBOfromPlaneMesh(PlaneMesh& mesh)
 
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, mesh.GetVerticesData().size() * sizeof(float), &mesh.GetVerticesData()[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, mesh.GetVerticesVector().size() * sizeof(Vertex), &mesh.GetVerticesVector()[0], GL_STATIC_DRAW);
 
 	glGenBuffers(1, &IBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
@@ -217,7 +217,7 @@ void Renderer::CreateVBOandIBOofLoadedMeshes()
 
 		glGenBuffers(1, &VBO);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, p.second->GetVerticesData().size() * sizeof(float), &p.second->GetVerticesData().at(0), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, p.second->GetVerticesVector().size() * sizeof(Vertex), &p.second->GetVerticesVector().at(0), GL_STATIC_DRAW);
 
 		glGenBuffers(1, &IBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
@@ -578,10 +578,10 @@ void Renderer::DrawPlaneMesh()
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_VBO["Plane"]);
 
-	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 14, 0);
-	glVertexAttribPointer(attribNormal, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 14, (GLvoid*)(sizeof(float) * 3));
-	glVertexAttribPointer(attribTexCoord, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 14, (GLvoid*)(sizeof(float) * 6));
-	glVertexAttribPointer(attribVertColor, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 14, (GLvoid*)(sizeof(float) * 10));
+	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+	glVertexAttribPointer(attribNormal, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex) , (GLvoid*)(sizeof(float) * 3));
+	glVertexAttribPointer(attribTexCoord, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex) , (GLvoid*)(sizeof(float) * 6));
+	glVertexAttribPointer(attribVertColor, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex) , (GLvoid*)(sizeof(float) * 10));
 
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO["Plane"]);
@@ -635,10 +635,10 @@ void Renderer::DrawSolidMesh()
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_VBO["LightingCheckBoard"]);
 
-	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 14, 0);
-	glVertexAttribPointer(attribNormal, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 14, (GLvoid*)(sizeof(float) * 3));
-	glVertexAttribPointer(attribTexCoord, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 14, (GLvoid*)(sizeof(float) * 6));
-	glVertexAttribPointer(attribVertColor, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 14, (GLvoid*)(sizeof(float) * 10));
+	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex) , 0);
+	glVertexAttribPointer(attribNormal, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex) , (GLvoid*)(sizeof(float) * 3));
+	glVertexAttribPointer(attribTexCoord, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex) , (GLvoid*)(sizeof(float) * 6));
+	glVertexAttribPointer(attribVertColor, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex) , (GLvoid*)(sizeof(float) * 10));
 
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO["LightingCheckBoard"]);

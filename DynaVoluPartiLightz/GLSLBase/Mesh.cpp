@@ -90,31 +90,7 @@ void Mesh::InitLoadMesh(const aiMesh* pMesh)
 void Mesh::UpdateVerticesDataForVBO()
 {
 
-	// 초기화 하고 시작
-	mVerticesData.clear();
 
-	for (auto& e : mVertices)
-	{
-		// Calculate Normalized Vector and Set
-		//e.SetNormal(glm::normalize(e.GetNormal()));
-		//std::cout << e.GetPosition().x << ", " << e.GetPosition().y << ", " << e.GetPosition().z << " " << std::endl;
-		//std::cout << e.GetNormal().x << ", " << e.GetNormal().y << ", " << e.GetNormal().z << " "  << std::endl;
-
-		mVerticesData.emplace_back(e.GetPosition().x);
-		mVerticesData.emplace_back(e.GetPosition().y);
-		mVerticesData.emplace_back(e.GetPosition().z);
-		mVerticesData.emplace_back(e.GetNormal().x);
-		mVerticesData.emplace_back(e.GetNormal().y);
-		mVerticesData.emplace_back(e.GetNormal().z);
-		mVerticesData.emplace_back(e.GetTexCoord().x);
-		mVerticesData.emplace_back(e.GetTexCoord().y);
-		mVerticesData.emplace_back(e.GetTexCoord().z);
-		mVerticesData.emplace_back(e.GetTexCoord().w);
-		mVerticesData.emplace_back(e.GetVertexColor().x);
-		mVerticesData.emplace_back(e.GetVertexColor().y);
-		mVerticesData.emplace_back(e.GetVertexColor().z);
-		mVerticesData.emplace_back(e.GetVertexColor().w);
-	}
 
 	//// for debugging
 	//for (auto& e : mIndices)
