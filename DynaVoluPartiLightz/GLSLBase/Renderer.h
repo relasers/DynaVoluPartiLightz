@@ -6,9 +6,9 @@
 #include <iostream>
 #include "Mesh.h"
 #include "Camera.h"
-#include "Transform.h"
 #include "Light.h"
 #include "Particle.h"
+#include "GameObject.h"
 
 #include "Dependencies\glew.h"
 #include "Dependencies\wglew.h"
@@ -59,6 +59,7 @@ private:
 	void CreateTextureDrawResource();
 	void CreateVBOandIBOfromPlaneMesh(PlaneMesh& mesh);
 	void CreateVBOandIBOofLoadedMeshes();
+	void CreateSceneObjects();
 
 
 	unsigned char * Renderer::loadBMPRaw(const char * imagepath, unsigned int& outWidth, unsigned int& outHeight);
@@ -74,11 +75,10 @@ private:
 	std::unordered_map < std::string, GLuint > m_Texture;
 
 	PlaneMesh mPlaneMesh;
-	Transform mPlaneTransform;
-	
 	DirectionalLight mMainDirectionalLight;
 
-	std::unordered_map < std::string, Mesh> mMeshes;
+	std::unordered_map < std::string, std::unique_ptr<Mesh> > mMeshes;
+	std::unordered_map < std::string, GameObject> mGameObjects;
 
 	std::unordered_map < std::string, GLuint > m_VBO;
 	std::unordered_map < std::string, GLuint > m_IBO;

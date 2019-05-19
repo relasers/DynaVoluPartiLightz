@@ -157,7 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
-    <ClInclude Include="GameObect.h" />
+    <ClInclude Include="GameObject.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="LoadPng.h" />
     <ClInclude Include="MathUtility.h" />
@@ -171,6 +171,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="LoadPng.cpp" />
     <ClCompile Include="Mesh.cpp" />

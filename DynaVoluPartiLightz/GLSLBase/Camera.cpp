@@ -82,7 +82,7 @@ void Camera::Rotate(const glm::vec3& vAxis, float fAngle)
 
 void Camera::KeyInput(unsigned char key, int x, int y)
 {
-	static const float weight = 0.25f;
+	static const float weight = 1.f;
 	switch (key) {
 	case 'w': case 'W':
 		mCameraPos += mCameraLookDir * weight;

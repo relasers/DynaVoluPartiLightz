@@ -31,6 +31,9 @@
     <ClCompile Include="Particle.cpp">
       <Filter>Source\Particle</Filter>
     </ClCompile>
+    <ClCompile Include="GameObject.cpp">
+      <Filter>Source\GameObject</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -48,7 +51,6 @@
     <ClInclude Include="Mesh.h">
       <Filter>Source\Mesh</Filter>
     </ClInclude>
-    <ClInclude Include="GameObect.h" />
     <ClInclude Include="Vertex.h">
       <Filter>Source\Vertex</Filter>
     </ClInclude>
@@ -66,6 +68,9 @@
     </ClInclude>
     <ClInclude Include="MathUtility.h">
       <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObject.h">
+      <Filter>Source\GameObject</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -130,6 +135,9 @@
     </Filter>
     <Filter Include="Source\Particle">
       <UniqueIdentifier>{00bb750a-c2bc-43b2-a6d1-00007b169e35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\GameObject">
+      <UniqueIdentifier>{d5b1f680-782f-477d-8f5a-b0e65de2462b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

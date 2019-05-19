@@ -56,63 +56,18 @@ void RenderScene(void)
 
 void Idle(void)
 {
-	//std::cout << curr_theta << std::endl;
-	//curr_theta = (curr_theta + target_theta)*0.00015f;
-	
-	float delta = 0.005f;
-	curr_theta = (1 - delta)*curr_theta + delta * target_delta;
-	
 	RenderScene();
 }
 
 void MouseInput(int button, int state, int x, int y)
 {
 	g_Renderer->GetMainCamera().MouseInput(x,y,button,state);
-	if ((button == 3) || (button == 4))
-	{
-		if (button == 3) // UP
-			//target_delta = std::min<float>(target_delta + 1, 2*M_PI/360.0f * (180.0f-1.f) ); // radian
-			//target_delta = std::min<float>(target_delta + 15, 179);
-			target_delta = std::min<float>(target_delta + 0.01, 1);
-		else
-			//target_delta = std::max<float>(target_delta - 15, 0);
-			target_delta = std::max<float>(target_delta - 0.01, 0);
-	}
-
 	RenderScene();
 }
 
 void KeyInput(unsigned char key, int x, int y)
 {
-	float delta = 0.1f;
 	g_Renderer->GetMainCamera().KeyInput(key,x,y);
-	
-	float movedelta = 0.1f;
-	if (key == 0x34)
-	{
-		AxisPivot.y = std::min<float>(AxisPivot.y + movedelta, 1);
-	}
-	if (key == 0x33)
-	{
-		AxisPivot.y = std::max<float>(AxisPivot.y - movedelta, 0);
-	}
-	if (key == 0x31)
-	{
-		AxisPivot.x = std::max<float>(AxisPivot.x - movedelta, 0);
-	}
-	if (key == 0x32)
-	{
-		AxisPivot.x = std::min<float>(AxisPivot.x + movedelta, 1);
-	}
-	if (key == 0x35)
-	{
-		AxisPivotTheta = std::max<float>(AxisPivotTheta - 10, 0);
-	}
-	if (key == 0x36)
-	{
-		AxisPivotTheta = std::min<float>(AxisPivotTheta + 10, 180);
-	}
-
 	RenderScene();
 }
 

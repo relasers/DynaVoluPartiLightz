@@ -35,6 +35,8 @@
 
 #include "MathUtility.h"
 
+// 1UNIT = 100
+
 constexpr float FLT_PI = 3.141592f;
 constexpr float DEGREE_TO_RADIAN(float degree) { return (FLT_PI * degree) / 180.0f; }
 constexpr float RADIAN_TO_DEGREE(float radian) { return (180.0f * radian) / FLT_PI; }

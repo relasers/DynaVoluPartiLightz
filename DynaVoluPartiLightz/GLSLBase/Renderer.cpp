@@ -50,13 +50,16 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 
 	 mMainDirectionalLight.mDirection = glm::normalize(glm::vec3(50,-30,0));
 
+	 CreateSceneObjects();
+
+
 }
 
 void Renderer::CreateGeometryDataMeshes()
 {
 	//mPlaneMesh.BuildGeomData(50,50);
 	//mMeshes["LightingCheckBoard"] = Mesh("LightingCheckBoard", std::string("./Resource/Model/LightingCheckBoard_smooth.obj"));
-	mMeshes["LightingCheckBoard"] = Mesh("LightingCheckBoard", std::string("./Resource/Model/LightingCheckBoard.fbx"));
+	mMeshes["LightingCheckBoard"] = std::make_unique<Mesh>("LightingCheckBoard", std::string("./Resource/Model/LightingCheckBoard.fbx"));
 }
 
 void Renderer::CreateVertexBufferObjects()
@@ -156,9 +159,9 @@ void Renderer::CreateShaderStorageBufferObjectsForParticles()
 			NUM_PARTICLES * sizeof(ParticlePosition), bufMask);
 	for (int i = 0; i < NUM_PARTICLES; i++)
 	{
-		points[i].mPosition.x = RandomRangeFloat(-20.0f, 20.0f);
-		points[i].mPosition.y = RandomRangeFloat(-20.0f, 20.0f);
-		points[i].mPosition.z = RandomRangeFloat(-20.0f, 20.0f);
+		points[i].mPosition.x = RandomRangeFloat(0.0f, 100.0f);
+		points[i].mPosition.y = RandomRangeFloat(0.0f, 100.0f);
+		points[i].mPosition.z = RandomRangeFloat(0.0f, 100.0f);
 		points[i].mPosition.w = 1;
 	}
 
@@ -210,16 +213,25 @@ void Renderer::CreateVBOandIBOofLoadedMeshes()
 
 		glGenBuffers(1, &VBO);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, p.second.GetVerticesData().size() * sizeof(float), &p.second.GetVerticesData().at(0), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, p.second->GetVerticesData().size() * sizeof(float), &p.second->GetVerticesData().at(0), GL_STATIC_DRAW);
 
 		glGenBuffers(1, &IBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, p.second.GetIndicesVector().size() * sizeof(unsigned int), &p.second.GetIndicesVector().at(0), GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, p.second->GetIndicesVector().size() * sizeof(unsigned int), &p.second->GetIndicesVector().at(0), GL_STATIC_DRAW);
 
 
 		m_VBO[p.first] = VBO;
 		m_IBO[p.first] = IBO;
 	}
+}
+
+void Renderer::CreateSceneObjects()
+{
+	GameObject MainGeom;
+	mGameObjects["MainGeom"] = MainGeom;
+	mGameObjects["MainGeom"].SetMesh(mMeshes["LightingCheckBoard"].get());
+	mGameObjects["MainGeom"].SetPosition(glm::vec3(50,50,50));
+	mGameObjects["MainGeom"].SetScale(glm::vec3(1,1,1));
 }
 
 
@@ -534,7 +546,7 @@ void Renderer::DrawPlaneMesh()
 	GLuint model = glGetUniformLocation(shader, "u_Model");
 
 	glUniformMatrix4fv(projView, 1, GL_FALSE, &mCamera.GetProjViewMatrix()[0][0]);
-	glUniformMatrix4fv(model, 1, GL_FALSE, &mPlaneTransform.GetModelMatrix()[0][0]);
+	glUniformMatrix4fv(model, 1, GL_FALSE, &mGameObjects["Plane"].GetTransform()->GetModelMatrix()[0][0]);
 
 	glEnableVertexAttribArray(attribPosition);
 	glEnableVertexAttribArray(attribNormal);
@@ -580,7 +592,7 @@ void Renderer::DrawSolidMesh()
 
 
 	glUniformMatrix4fv(projView, 1, GL_FALSE, &mCamera.GetProjViewMatrix()[0][0]);
-	glUniformMatrix4fv(model, 1, GL_FALSE, &mPlaneTransform.GetModelMatrix()[0][0]);
+	glUniformMatrix4fv(model, 1, GL_FALSE, &mGameObjects["MainGeom"].GetTransform()->GetModelMatrix()[0][0]);
 
 	glUniform3f(cameraPos, mCamera.GetCameraPos().x,
 		 mCamera.GetCameraPos().y,
@@ -610,7 +622,7 @@ void Renderer::DrawSolidMesh()
 	glLineWidth(2);
 	
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_TRIANGLES);
-	glDrawElements(GL_TRIANGLES, mMeshes["LightingCheckBoard"].GetIndicesVector().size()*2, GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, mMeshes["LightingCheckBoard"]->GetIndicesVector().size()*2, GL_UNSIGNED_INT, 0);
 
 	//std::cout << "|" << m_VBO["LightingCheckBoard"] << " " << m_IBO["LightingCheckBoard"] << std::endl;
 	//std::cout << mMeshes["LightingCheckBoard"].GetIndicesVector().size() << std::endl;
@@ -643,6 +655,9 @@ void Renderer::DrawParticle()
 {
 	GLuint shader = m_Shaders["BasicParticle"];
 	glUseProgram(shader);
+
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_SSBO["ParticlePosition"]);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, m_SSBO["ParticleVelocity"]);
 
 	GLuint projView = glGetUniformLocation(shader, "u_ProjView");
 	glUniformMatrix4fv(projView, 1, GL_FALSE, &mCamera.GetProjViewMatrix()[0][0]);
@@ -724,7 +739,8 @@ void Renderer::ResetFrameBuffer()
 
 void Renderer::Update()
 {
-	mCamera.UpdateCameraMatrix();
+	static float deltaTime = 0;
+	deltaTime += 0.016f;
 }
 
 void Renderer::CameraMove(glm::vec3 _velocity, float delta)
