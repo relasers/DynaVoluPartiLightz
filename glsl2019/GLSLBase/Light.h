@@ -19,7 +19,6 @@ struct LightData
 	float mAtten2;
 	float mTheta;
 	float mPhi;
-
 };
 
 struct PointLight
@@ -29,7 +28,6 @@ struct PointLight
 	float mRange;
 	glm::float3 mAtten;
 };
-
 
 struct PointLight_p
 {

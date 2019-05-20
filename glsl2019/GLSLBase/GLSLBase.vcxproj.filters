@@ -1,0 +1,179 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="GLSLBase.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="LoadPng.cpp">
+      <Filter>Renderer\LoadPng</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>pch</Filter>
+    </ClCompile>
+    <ClCompile Include="Vertex.cpp">
+      <Filter>Geometry\Vertex</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>Geometry\Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="GameObject.cpp">
+      <Filter>Geometry\GameObject</Filter>
+    </ClCompile>
+    <ClCompile Include="Transform.cpp">
+      <Filter>Geometry\Transform</Filter>
+    </ClCompile>
+    <ClCompile Include="VertexData.cpp">
+      <Filter>Geometry\VertexData</Filter>
+    </ClCompile>
+    <ClCompile Include="Light.cpp">
+      <Filter>Geometry\Light</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Camera.h">
+      <Filter>Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="LoadPng.h">
+      <Filter>Renderer\LoadPng</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>pch</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>pch</Filter>
+    </ClInclude>
+    <ClInclude Include="Vertex.h">
+      <Filter>Geometry\Vertex</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>Geometry\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObject.h">
+      <Filter>Geometry\GameObject</Filter>
+    </ClInclude>
+    <ClInclude Include="Transform.h">
+      <Filter>Geometry\Transform</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexData.h">
+      <Filter>Geometry\VertexData</Filter>
+    </ClInclude>
+    <ClInclude Include="Light.h">
+      <Filter>Geometry\Light</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\TextureDump.vert">
+      <Filter>Renderer\Shader\TextureDump</Filter>
+    </None>
+    <None Include="Shaders\SolidRect.vert">
+      <Filter>Renderer\Shader\SolidRect</Filter>
+    </None>
+    <None Include="Shaders\ProxyGeometry.vert">
+      <Filter>Renderer\Shader\ProxyGeometry</Filter>
+    </None>
+    <None Include="Shaders\ProxyGeometry.frag">
+      <Filter>Renderer\Shader\ProxyGeometry</Filter>
+    </None>
+    <None Include="Shaders\SolidRect.frag">
+      <Filter>Renderer\Shader\SolidRect</Filter>
+    </None>
+    <None Include="Shaders\TextureDump.frag">
+      <Filter>Renderer\Shader\TextureDump</Filter>
+    </None>
+    <None Include="Shaders\Particle.frag">
+      <Filter>Renderer\Shader\Particle</Filter>
+    </None>
+    <None Include="Shaders\Particle.vert">
+      <Filter>Renderer\Shader\Particle</Filter>
+    </None>
+    <None Include="Shaders\Particle.geom">
+      <Filter>Renderer\Shader\Particle</Filter>
+    </None>
+    <None Include="Shaders\ParticleCD.frag">
+      <Filter>Renderer\Shader\ParticleCD</Filter>
+    </None>
+    <None Include="Shaders\ParticleCD.geom">
+      <Filter>Renderer\Shader\ParticleCD</Filter>
+    </None>
+    <None Include="Shaders\ParticleCD.vert">
+      <Filter>Renderer\Shader\ParticleCD</Filter>
+    </None>
+    <None Include="Shaders\SolidMesh.frag">
+      <Filter>Renderer\Shader\SolidMesh</Filter>
+    </None>
+    <None Include="Shaders\SolidMesh.vert">
+      <Filter>Renderer\Shader\SolidMesh</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source">
+      <UniqueIdentifier>{a7fcb93d-3717-43ab-b316-e9d0ce5b8225}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header">
+      <UniqueIdentifier>{281c75ca-d516-457d-94dd-38314bf09c82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Camera">
+      <UniqueIdentifier>{29f583af-cf23-4644-b383-00123d54f5a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer">
+      <UniqueIdentifier>{59e7c9f8-8140-47d1-b321-dcf0844f9ae9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pch">
+      <UniqueIdentifier>{9c798fce-1cd6-4d6b-a929-bab1aed8542a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\LoadPng">
+      <UniqueIdentifier>{d8b8cdbe-1d80-4c05-8cef-4c808cffa610}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Shader">
+      <UniqueIdentifier>{67bf60d2-2daa-4412-a92a-1ef604d4703f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Shader\SolidRect">
+      <UniqueIdentifier>{39d48704-7269-4dc6-8b90-b966b87d1a71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Shader\ProxyGeometry">
+      <UniqueIdentifier>{2cea8f3b-8854-47d6-a798-343a93299cd9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Shader\TextureDump">
+      <UniqueIdentifier>{35d73dde-a36b-46da-ae14-267807c259a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Geometry">
+      <UniqueIdentifier>{81e307ce-428a-461a-b660-9b49e69632af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Geometry\Vertex">
+      <UniqueIdentifier>{8148a291-ce4a-4c06-aff6-7a47d4ed05e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Shader\Particle">
+      <UniqueIdentifier>{c776b218-7975-421f-86ff-2bfed6c0413e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Shader\ParticleCD">
+      <UniqueIdentifier>{b352b08f-d7c7-40e2-aff6-0f98c5ecf541}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Geometry\VertexData">
+      <UniqueIdentifier>{694cf36a-02b4-4d05-bae6-d039a137d4c4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Geometry\Mesh">
+      <UniqueIdentifier>{00b01bf2-cc6a-4346-afe9-4cb79faf0e3a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Geometry\Transform">
+      <UniqueIdentifier>{5bce2861-1ce4-4b17-9dbc-25f897fe1a2d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Geometry\GameObject">
+      <UniqueIdentifier>{4b038c27-5386-4800-8190-60bb3569b9e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Shader\SolidMesh">
+      <UniqueIdentifier>{32d65c67-3b1b-42e9-bb2b-9f04ce2e4ebd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Geometry\Light">
+      <UniqueIdentifier>{06db13e0-dc27-482b-b1e2-c350502cfc83}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
