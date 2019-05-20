@@ -33,6 +33,7 @@ public:
 	void DrawSolidMesh();
 
 	void SimulateParticle();
+	void ClearWorldParticleTextures();
 	void UpdateWorldParticleTextures();
 	void DrawParticle();
 
@@ -44,6 +45,8 @@ public:
 	void Update();
 	void CameraMove(glm::vec3 _velocity, float delta);
 	Camera& GetMainCamera() { return mCamera; }
+
+	void KeyInput(unsigned char key, int x, int y);
 
 	GLuint GetTextureID(std::string _name) { return m_Texture[_name]; }
 private:
@@ -91,5 +94,7 @@ private:
 
 	std::unordered_map < std::string, GLuint > m_SSBO;
 	Camera mCamera;
+
+	int mNumRenderingParticle{NUM_PARTICLES}; // 몇개나 그릴 것인지.
 };
 

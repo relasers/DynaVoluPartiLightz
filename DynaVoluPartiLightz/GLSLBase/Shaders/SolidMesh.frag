@@ -30,15 +30,18 @@ struct SpotLight
 
 
 
+uniform sampler3D u_WorldIntensityTexture;
 uniform DirectionalLight dirLight;
 
 #define NR_POINT_LIGHTS 64  
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 
 
+in vec4 v_WorldPosition;
+
+
 const int shininess = 32;
 
-in vec3 v_WorldPosition;
 
 vec3 CalcDirLight(DirectionalLight light, vec3 normal, vec3 viewDir)
 {
@@ -82,7 +85,12 @@ void main()
 {
 	//FragColor = v_Color;
 	FragColor = vec4(0.2f,0.2f,0.2f,1.0f);
+	FragColor = vec4(0.1f,0.1f,0.1f,1.0f);
 	FragColor.xyz *= CalcDirLight(dirLight,v_Normal,v_viewDir);
-	//FragColor.x = v_WorldPosition.x/100.0f;
+
+	vec3 new_coord = v_WorldPosition.xyz;
+	new_coord /= 128.0f;
+	FragColor.xyz += texture(u_WorldIntensityTexture,new_coord).xyz*v_WorldPosition.xyz/100.0f;
+	//FragColor.x = ;
 	//FragColor = vec4(1,1,1,1);
 }

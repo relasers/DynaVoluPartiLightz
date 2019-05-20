@@ -34,6 +34,8 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 	
 	m_Shaders["BasicParticle"] = CompileShaders("./Shaders/BasicParticle.vert", "./Shaders/BasicParticle.frag");
 	m_Shaders["ParticleSimulate"] = CompileComputeShaders("./Shaders/ParticleSimulate.comp");
+	m_Shaders["ParticleWorldIntensityClear"] = CompileComputeShaders("./Shaders/ParticleWorldIntensityClear.comp");
+	m_Shaders["ParticleWorldIntensityUpdate"] = CompileComputeShaders("./Shaders/ParticleWorldIntensityUpdate.comp");
 	//Create Geometry Data
 	CreateGeometryDataMeshes();
 	//Create VBOs
@@ -234,7 +236,7 @@ void Renderer::CreateSceneObjects()
 	GameObject MainGeom;
 	mGameObjects["MainGeom"] = MainGeom;
 	mGameObjects["MainGeom"].SetMesh(mMeshes["LightingCheckBoard"].get());
-	mGameObjects["MainGeom"].SetPosition(glm::vec3(50,0,50));
+	mGameObjects["MainGeom"].SetPosition(glm::vec3(50,10,50));
 	mGameObjects["MainGeom"].SetScale(glm::vec3(1,1,1));
 }
 
@@ -244,20 +246,17 @@ void Renderer::CreateParticleLightTextureData()
 
 	glGenTextures(1, &mWorldParticleTexture["WorldParticleIntensity"]);
 	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleIntensity"]);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP);
 	// 이때는 메모리 할당만 시행한다.
-	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8, WORLD_SIZE, WORLD_SIZE, WORLD_SIZE, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA32F,
+		WORLD_SIZE, WORLD_SIZE, WORLD_SIZE, 0, GL_RGBA, GL_FLOAT, 0 );
 
-	glGenFramebuffers(1, &m_FBO["WorldParticleIntensity"]);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_Texture["Intensity"], 0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 }
-
-
 
 void Renderer::AddShader(GLuint ShaderProgram, const char* pShaderText, GLenum ShaderType)
 {
@@ -417,11 +416,6 @@ GLuint Renderer::CompileComputeShaders(char* filenameCS)
 
 	return ShaderProgram;
 }
-
-
-
-
-
 unsigned char * Renderer::loadBMPRaw(const char * imagepath, unsigned int& outWidth, unsigned int& outHeight)
 {
 	std::cout << "Loading bmp file " << imagepath << " ... " << std::endl;
@@ -628,6 +622,12 @@ void Renderer::DrawSolidMesh()
 		mMainDirectionalLight.mDirection.y, 
 		mMainDirectionalLight.mDirection.z);
 
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleIntensity"]);
+	GLuint gTextureId = glGetUniformLocation(shader, "u_WorldIntensityTexture");
+	glUniform1i(gTextureId, 0);
+
 	glEnableVertexAttribArray(attribPosition);
 	glEnableVertexAttribArray(attribNormal);
 	glEnableVertexAttribArray(attribTexCoord);
@@ -660,9 +660,7 @@ void Renderer::DrawSolidMesh()
 
 void Renderer::SimulateParticle()
 {
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-
+	
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_SSBO["ParticlePosition"]);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, m_SSBO["ParticleVelocity"]);
 	//glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, m_SSBO["ParticleColor"]);
@@ -672,16 +670,67 @@ void Renderer::SimulateParticle()
 	glUseProgram(shader);
 	glDispatchCompute(NUM_PARTICLES / WORK_GROUP_SIZE, 1, 1);
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+	ClearWorldParticleTextures();
+	UpdateWorldParticleTextures();
+
 }
+
+void Renderer::ClearWorldParticleTextures()
+{
+	////////////////////////////
+	GLuint shader = m_Shaders["ParticleWorldIntensityClear"];
+
+	glUseProgram(shader);
+
+	// Activate Texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleIntensity"]);
+	glBindImageTexture(0, mWorldParticleTexture["WorldParticleIntensity"], 0,
+		GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
+	// 컴퓨트 셰이더에서 특정 텍스쳐에 값을 
+	// 쓰기 위해서는 glBindImageTexture 를 절대 잊지 말것!
+
+	GLuint gTextureId = glGetUniformLocation(shader, "destTex");
+	glUniform1i(gTextureId, 0);
+
+	glDispatchCompute(WORLD_SIZE / WORLD_WORK_GROUP_SIZE,
+		WORLD_SIZE / WORLD_WORK_GROUP_SIZE,
+		WORLD_SIZE / WORLD_WORK_GROUP_SIZE);
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+}
+
+
 
 void Renderer::UpdateWorldParticleTextures()
 {
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_SSBO["ParticlePosition"]);
+	
 
+	GLuint shader = m_Shaders["ParticleWorldIntensityUpdate"];
+	
+	glUseProgram(shader);
+	
+	// Activate Texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleIntensity"]);
+	glBindImageTexture(0, mWorldParticleTexture["WorldParticleIntensity"], 0,
+		GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
+	// 컴퓨트 셰이더에서 특정 텍스쳐에 값을 
+	// 쓰기 위해서는 glBindImageTexture 를 절대 잊지 말것!
+	GLuint gTextureId = glGetUniformLocation(shader, "destTex");
+	glUniform1i(gTextureId, 0);
+
+	glDispatchCompute(mNumRenderingParticle / WORK_GROUP_SIZE, 1, 1);
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
 
 }
 
 void Renderer::DrawParticle()
 {
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+
 	GLuint shader = m_Shaders["BasicParticle"];
 	glUseProgram(shader);
 
@@ -695,7 +744,7 @@ void Renderer::DrawParticle()
 	glBindBuffer(GL_ARRAY_BUFFER, m_SSBO["ParticlePosition"]);
 	glVertexPointer(4, GL_FLOAT, 0, (void*)0);
 	glEnableClientState(GL_VERTEX_ARRAY);
-	glDrawArrays(GL_POINTS, 0, NUM_PARTICLES);
+	glDrawArrays(GL_POINTS, 0, mNumRenderingParticle);
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -776,4 +825,24 @@ void Renderer::CameraMove(glm::vec3 _velocity, float delta)
 {
 	glm::vec3 newPosition = mCamera.GetCameraPos() + _velocity * delta;
 	mCamera.SetCameraPosition(newPosition);
+}
+
+void Renderer::KeyInput(unsigned char key, int x, int y)
+{
+	GetMainCamera().KeyInput(key, x, y);
+
+	switch (key) {
+	case 't': case 'T':
+		mNumRenderingParticle = std::min(static_cast<int>(NUM_PARTICLES), mNumRenderingParticle*2);
+		break;
+	case 'g': case 'G':
+		mNumRenderingParticle = std::max(1, static_cast<int>(mNumRenderingParticle * 0.5));
+
+		break;
+
+
+	}
+
+
+
 }

@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <string>
 #include <iostream>
-#include <math.h>
+#include <cmath>
 #include <algorithm>
 
 // 

@@ -12,7 +12,7 @@ uniform vec3 u_CameraPos;
 out vec4 v_Color;
 out vec3 v_Normal;
 out vec3 v_viewDir;
-out vec3 v_WorldPosition;
+out vec4 v_WorldPosition;
 
 void main()
 {
@@ -20,8 +20,8 @@ void main()
 	v_Color = a_VertColor;
 	v_Color = vec4(a_Normal,1);
 	v_Normal = a_Normal;
-	v_WorldPosition = a_Position;
-	gl_Position = u_ProjView * u_Model * vec4(a_Position, 1.f);
+	v_WorldPosition = u_Model * vec4(a_Position, 1.f);
+	gl_Position = u_ProjView * v_WorldPosition;
 	v_viewDir = normalize( a_Position.xyz - u_CameraPos );
 	//gl_Position = vec4(a_Position, 1.f);
 

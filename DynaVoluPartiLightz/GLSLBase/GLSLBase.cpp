@@ -67,7 +67,7 @@ void MouseInput(int button, int state, int x, int y)
 
 void KeyInput(unsigned char key, int x, int y)
 {
-	g_Renderer->GetMainCamera().KeyInput(key,x,y);
+	g_Renderer->KeyInput(key,x,y);
 	RenderScene();
 }
 
