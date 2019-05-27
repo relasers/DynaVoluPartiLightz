@@ -7,8 +7,19 @@ layout( std140, binding= 4 ) buffer ParticlePosition
 	vec4 Positions[];
 };
 
-layout (rgba32f, binding = 0) uniform image3D destTex;
+layout( std140, binding= 6 ) buffer ParticleLightColor
+{
+	vec4 LightColor[];
+};
 
+layout( std140, binding= 7 ) buffer ParticleRangeAtten
+{
+	vec4 AttenRange[];
+};
+
+
+layout (rgba32f, binding = 0) uniform image3D LightDirTex;
+layout (rgba32f, binding = 1) uniform image3D LightColorTex;
 
 layout( local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
 void main()
@@ -17,10 +28,9 @@ void main()
 	uint gid = gl_GlobalInvocationID.x;
 	ivec3 particlePosition =ivec3(Positions[ gid ].x, Positions[ gid ].y,Positions[ gid ].z );
 
-	const int dist = 3;
+	highp int dist = int(AttenRange[gid].w);
 
-	// 레이 쏘는걸로 바꿔야하나?
-
+	
 	for(int i =-dist;i<dist;++i)
 	{
 		for(int j =-dist;j<dist;++j)
@@ -34,8 +44,15 @@ void main()
 				pixel_coords.y = clamp(pixel_coords.y,0,128);
 				pixel_coords.z = clamp(pixel_coords.z,0,128);
 				
-				float value = distance(particlePosition, pixel_coords );
-				if (value > dist) continue;
+				// distance between lightcenter from picked texel
+				float distvalue = distance(particlePosition, pixel_coords );
+				if (distvalue > dist) continue;
+
+				float attenuation = 1.0 / 
+				(AttenRange[gid].x 
+				+ AttenRange[gid].y * distvalue +
+				AttenRange[gid].z * (distvalue * distvalue));    
+				
 
 				vec4 pixel = vec4(
 				pixel_coords.x/128.0f,
@@ -45,18 +62,23 @@ void main()
 				);
 
 
-				vec4 final_color;
-				vec3 light_dir = normalize(pixel_coords - particlePosition); // 우선 단위벡터로 넘겨보자.
-				final_color.xyz = light_dir.xyz;
-				final_color.a = mix(1,0,value/dist);
-				final_color = max(final_color,0);
+				vec4 final_dir;
+				vec3 light_dir = normalize( particlePosition - pixel_coords); // 우선 단위벡터로 넘겨보자.
+				final_dir.xyz = light_dir.xyz;
 
-				vec4 stored_pixel = imageLoad(destTex, pixel_coords); 
-
+				// 파티클 라이트 컬러를 사용안하고 intensity 값만 반영할 경우 사용하기 위해
+				final_dir.a = attenuation;
+				final_dir.a = max(0,final_dir.a);
+				vec4 stored_dir_pixel = imageLoad(LightDirTex, pixel_coords); 
+				vec4 stored_color_pixel = imageLoad(LightColorTex,pixel_coords);
 				//if(final_color.a < stored_pixel.a ) light_dir.xyz = stored_pixel.xyz;
-
+				vec4 final_color = attenuation * vec4(LightColor[gid].xyzw);
+				final_color = max(vec4(0),final_color);
 				// interpolation 해서 받아오고 반영해주어야함
-				imageStore (destTex, pixel_coords, stored_pixel+final_color );
+
+				imageStore (LightDirTex, pixel_coords, stored_dir_pixel+final_dir );
+				imageStore (LightColorTex, pixel_coords, stored_color_pixel + final_color );
+				//imageStore (LightColorTex, pixel_coords, vec4(1) );
 			}
 		}
 	}

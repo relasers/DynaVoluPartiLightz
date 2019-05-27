@@ -151,7 +151,8 @@ void Renderer::CreateShaderStorageBufferObjectsForParticles()
 {
 	m_SSBO["ParticlePosition"] = 0;
 	m_SSBO["ParticleVelocity"] = 0;
-	m_SSBO["ParticleColor"] = 0;
+	m_SSBO["ParticleLightColor"] = 0;
+	m_SSBO["ParticleRangeAtten"] = 0;
 
 	glGenBuffers(1,&m_SSBO["ParticlePosition"]);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO["ParticlePosition"]);
@@ -188,6 +189,42 @@ void Renderer::CreateShaderStorageBufferObjectsForParticles()
 		vels[i].mVelocity.w = 0;
 	}
 	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+
+	glGenBuffers(1, &m_SSBO["ParticleLightColor"]);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO["ParticleLightColor"]);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, NUM_PARTICLES * sizeof(ParticleLightColor), NULL, GL_STATIC_DRAW);
+
+	ParticleLightColor* particlelightcolor
+		= (ParticleLightColor*)glMapBufferRange
+		(GL_SHADER_STORAGE_BUFFER, 0,
+			NUM_PARTICLES * sizeof(ParticleLightColor), bufMask);
+	for (int i = 0; i < NUM_PARTICLES; i++)
+	{
+		particlelightcolor[i].mLightColor.x = RandomRangeFloat(0.5f, 1.0f);
+		particlelightcolor[i].mLightColor.y = RandomRangeFloat(0.5f, 1.0f);
+		particlelightcolor[i].mLightColor.z = RandomRangeFloat(0.5f, 1.0f);
+		particlelightcolor[i].mLightColor.w = RandomRangeFloat(0.5,1);
+	}
+	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+
+	glGenBuffers(1, &m_SSBO["ParticleRangeAtten"]);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO["ParticleRangeAtten"]);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, NUM_PARTICLES * sizeof(ParticleRangeAtten), NULL, GL_STATIC_DRAW);
+
+	ParticleRangeAtten* particlelightatten
+		= (ParticleRangeAtten*)glMapBufferRange
+		(GL_SHADER_STORAGE_BUFFER, 0,
+			NUM_PARTICLES * sizeof(ParticleRangeAtten), bufMask);
+	for (int i = 0; i < NUM_PARTICLES; i++)
+	{
+		particlelightatten[i].mAttenRange.x = 1.0;
+		particlelightatten[i].mAttenRange.y = 0.1;
+		particlelightatten[i].mAttenRange.z = 0.01;
+		particlelightatten[i].mAttenRange.w = RandomRangeFloat(1, 5);
+	}
+	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+
+
 
 }
 
@@ -244,10 +281,11 @@ void Renderer::CreateSceneObjects()
 
 void Renderer::CreateParticleLightTextureData()
 {
-	mWorldParticleTexture["WorldParticleIntensity"] = 0;
+	mWorldParticleTexture["WorldParticleLightColor"] = 0;
+	mWorldParticleTexture["WorldParticleLightDirection"] = 0;
 
-	glGenTextures(1, &mWorldParticleTexture["WorldParticleIntensity"]);
-	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleIntensity"]);
+	glGenTextures(1, &mWorldParticleTexture["WorldParticleLightColor"]);
+	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleLightColor"]);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -256,6 +294,17 @@ void Renderer::CreateParticleLightTextureData()
 	// 이때는 메모리 할당만 시행한다.
 	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA32F,
 		WORLD_SIZE, WORLD_SIZE, WORLD_SIZE, 0, GL_RGBA, GL_FLOAT, 0 );
+
+	glGenTextures(1, &mWorldParticleTexture["WorldParticleLightDirection"]);
+	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleLightDirection"]);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP);
+	// 이때는 메모리 할당만 시행한다.
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA32F,
+		WORLD_SIZE, WORLD_SIZE, WORLD_SIZE, 0, GL_RGBA, GL_FLOAT, 0);
 
 
 }
@@ -642,10 +691,18 @@ void Renderer::DrawSolidMesh(std::string _ObjectName)
 
 	glUniform1i(ActiveInterpolate, mbActiveTriInterPolate);
 	glUniform1i(ActiveTricubicInterpolate, mbUsingTricubicInterpolate);
+
+	////////////////////////////////////////////////////////////////
+	GLuint gTextureDirection = glGetUniformLocation(shader, "u_WorldParticleLightDirection");
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleIntensity"]);
-	GLuint gTextureId = glGetUniformLocation(shader, "u_WorldIntensityTexture");
-	glUniform1i(gTextureId, 0);
+	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleLightDirection"]);
+	glUniform1i(gTextureDirection, 0);
+
+	GLuint gTextureLightColor = glGetUniformLocation(shader, "u_WorldParticleLightColor");
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleLightColor"]);
+	glUniform1i(gTextureLightColor, 1);
+	///////////////////////////////////////////////////////////////
 
 	glEnableVertexAttribArray(attribPosition);
 	glEnableVertexAttribArray(attribNormal);
@@ -684,7 +741,7 @@ void Renderer::SimulateParticle()
 	
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_SSBO["ParticlePosition"]);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, m_SSBO["ParticleVelocity"]);
-	//glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, m_SSBO["ParticleColor"]);
+	
 
 	GLuint shader = m_Shaders["ParticleSimulate"];
 
@@ -704,16 +761,26 @@ void Renderer::ClearWorldParticleTextures()
 
 	glUseProgram(shader);
 
-	// Activate Texture
+	// Activate Texture0
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleIntensity"]);
-	glBindImageTexture(0, mWorldParticleTexture["WorldParticleIntensity"], 0,
+	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleLightDirection"]);
+	glBindImageTexture(0, mWorldParticleTexture["WorldParticleLightDirection"], 0,
 		GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
 	// 컴퓨트 셰이더에서 특정 텍스쳐에 값을 
 	// 쓰기 위해서는 glBindImageTexture 를 절대 잊지 말것!
+	GLuint gTextureDir = glGetUniformLocation(shader, "LightDirTex");
+	glUniform1i(gTextureDir, 0);
 
-	GLuint gTextureId = glGetUniformLocation(shader, "destTex");
-	glUniform1i(gTextureId, 0);
+	// Activate Texture1
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleLightColor"]);
+	glBindImageTexture(1, mWorldParticleTexture["WorldParticleLightColor"], 0,
+		GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
+	// 컴퓨트 셰이더에서 특정 텍스쳐에 값을 
+	// 쓰기 위해서는 glBindImageTexture 를 절대 잊지 말것!
+	GLuint gTextureColor = glGetUniformLocation(shader, "LightColorTex");
+	glUniform1i(gTextureColor, 1);
+
 
 	glDispatchCompute(WORLD_SIZE / WORLD_WORK_GROUP_SIZE,
 		WORLD_SIZE / WORLD_WORK_GROUP_SIZE,
@@ -726,21 +793,33 @@ void Renderer::ClearWorldParticleTextures()
 void Renderer::UpdateWorldParticleTextures()
 {
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_SSBO["ParticlePosition"]);
-	
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, m_SSBO["ParticleLightColor"]);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, m_SSBO["ParticleRangeAtten"]);
 
 	GLuint shader = m_Shaders["ParticleWorldIntensityUpdate"];
 	
 	glUseProgram(shader);
 	
-	// Activate Texture
+	// Activate Texture0
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleIntensity"]);
-	glBindImageTexture(0, mWorldParticleTexture["WorldParticleIntensity"], 0,
+	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleLightDirection"]);
+	glBindImageTexture(0, mWorldParticleTexture["WorldParticleLightDirection"], 0,
 		GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
 	// 컴퓨트 셰이더에서 특정 텍스쳐에 값을 
 	// 쓰기 위해서는 glBindImageTexture 를 절대 잊지 말것!
-	GLuint gTextureId = glGetUniformLocation(shader, "destTex");
-	glUniform1i(gTextureId, 0);
+	GLuint gTextureDir = glGetUniformLocation(shader, "LightDirTex");
+	glUniform1i(gTextureDir, 0);
+
+
+	// Activate Texture1
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleLightColor"]);
+	glBindImageTexture(1, mWorldParticleTexture["WorldParticleLightColor"], 0,
+		GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
+	// 컴퓨트 셰이더에서 특정 텍스쳐에 값을 
+	// 쓰기 위해서는 glBindImageTexture 를 절대 잊지 말것!
+	GLuint gTextureColor = glGetUniformLocation(shader, "LightColorTex");
+	glUniform1i(gTextureColor, 1);
 
 	glDispatchCompute(mNumRenderingParticle / WORK_GROUP_SIZE, 1, 1);
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
@@ -757,6 +836,7 @@ void Renderer::DrawParticle()
 
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_SSBO["ParticlePosition"]);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, m_SSBO["ParticleVelocity"]);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, m_SSBO["ParticleLightColor"]);
 
 	GLuint projView = glGetUniformLocation(shader, "u_ProjView");
 	glUniformMatrix4fv(projView, 1, GL_FALSE, &mCamera.GetProjViewMatrix()[0][0]);
