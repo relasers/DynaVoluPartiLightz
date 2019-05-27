@@ -30,7 +30,7 @@ public:
 	void Test();
 
 	void DrawPlaneMesh();
-	void DrawSolidMesh();
+	void DrawSolidMesh(std::string _ObjectName = "MainGeom");
 
 	void SimulateParticle();
 	void ClearWorldParticleTextures();
@@ -45,6 +45,7 @@ public:
 	void Update();
 	void CameraMove(glm::vec3 _velocity, float delta);
 	Camera& GetMainCamera() { return mCamera; }
+	std::string GetStatString() { return mWindowStatString; }
 
 	void KeyInput(unsigned char key, int x, int y);
 
@@ -66,13 +67,18 @@ private:
 	void CreateSceneObjects();
 
 	void CreateParticleLightTextureData();
-
 	unsigned char * Renderer::loadBMPRaw(const char * imagepath, unsigned int& outWidth, unsigned int& outHeight);
 
 	bool m_Initialized = false;
 	
+	bool mbSimulatingParticle = true;
+	bool mbActiveTriInterPolate = true;
+	bool mbUsingTricubicInterpolate = true;
+
 	unsigned int m_WindowSizeX = 0;
 	unsigned int m_WindowSizeY = 0;
+
+	std::string mWindowStatString;
 
 	GLuint m_VBORect = 0;
 

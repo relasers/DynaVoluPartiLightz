@@ -32,7 +32,8 @@ bool Mesh::loadOBJ(std::string path)
     //     /* aiProcess_ConvertToLeftHanded |            // D3D의 왼손좌표계로 변환 DX 사용할 경우 필요함 */
     //     aiProcess_SortByPType);                    // 단일타입의 프리미티브로 구성된 '깨끗한' 매쉬를 만듬
 	
-	const aiScene* pScene = aiImportFile(path.c_str(), aiProcess_ValidateDataStructure | aiProcess_JoinIdenticalVertices
+	const aiScene* pScene = aiImportFile(path.c_str(),
+		aiProcess_ValidateDataStructure | aiProcess_JoinIdenticalVertices
 		| aiProcess_GenSmoothNormals | aiProcess_SortByPType | aiProcess_Triangulate);
 
 

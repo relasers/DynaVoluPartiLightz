@@ -33,6 +33,9 @@ void main()
 				pixel_coords.x = clamp(pixel_coords.x,0,128);
 				pixel_coords.y = clamp(pixel_coords.y,0,128);
 				pixel_coords.z = clamp(pixel_coords.z,0,128);
+				
+				float value = distance(particlePosition, pixel_coords );
+				if (value > dist) continue;
 
 				vec4 pixel = vec4(
 				pixel_coords.x/128.0f,
@@ -41,15 +44,18 @@ void main()
 				1
 				);
 
-				float value = distance(particlePosition, pixel_coords );
 
 				vec4 final_color;
-				final_color.x = mix(1,0,value/dist);
-				final_color.y = mix(1,0,value/dist);
-				final_color.z = mix(1,0,value/dist);
-				final_color = clamp(final_color,0,1);
+				vec3 light_dir = normalize(pixel_coords - particlePosition); // 우선 단위벡터로 넘겨보자.
+				final_color.xyz = light_dir.xyz;
+				final_color.a = mix(1,0,value/dist);
+				final_color = max(final_color,0);
 
-				vec4 stored_pixel = imageLoad(destTex, pixel_coords);
+				vec4 stored_pixel = imageLoad(destTex, pixel_coords); 
+
+				//if(final_color.a < stored_pixel.a ) light_dir.xyz = stored_pixel.xyz;
+
+				// interpolation 해서 받아오고 반영해주어야함
 				imageStore (destTex, pixel_coords, stored_pixel+final_color );
 			}
 		}
@@ -57,3 +63,9 @@ void main()
    
 
 }
+
+// 블룸 추가, 토끼 추가, 씬 예쁘게, 파티클 텍스쳐 추가
+// 닫혀있는 씬, 사이즈 ( 광량을 저장 ) ,x,y,z 방향벡터 , a intensity만
+
+// nParticle * dist^3
+// nBufferSize^3 

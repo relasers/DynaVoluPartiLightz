@@ -22,7 +22,7 @@ void main()
 	v_Normal = a_Normal;
 	v_WorldPosition = u_Model * vec4(a_Position, 1.f);
 	gl_Position = u_ProjView * v_WorldPosition;
-	v_viewDir = normalize( a_Position.xyz - u_CameraPos );
+	v_viewDir = normalize( u_CameraPos.xyz - v_WorldPosition.xyz );
 	//gl_Position = vec4(a_Position, 1.f);
 
 }

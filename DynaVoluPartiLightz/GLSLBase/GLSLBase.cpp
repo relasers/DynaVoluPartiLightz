@@ -50,6 +50,8 @@ void RenderScene(void)
 	g_Renderer->DrawParticle();
 
 	g_Renderer->ResetFrameBuffer();
+
+	glutSetWindowTitle(g_Renderer->GetStatString().data());
 	//g_Renderer->DrawTexture(g_Renderer->GetTextureID("OldPage"), 0, 0, 200, 200);
 	glutSwapBuffers();
 }

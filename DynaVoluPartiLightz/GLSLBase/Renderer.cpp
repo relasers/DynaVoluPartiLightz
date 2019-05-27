@@ -51,7 +51,6 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 
 	 mMainDirectionalLight.mLightColor = glm::vec4(255.f, 244.f,214.f,255.f);
 	 mMainDirectionalLight.mLightColor /= 255.f;
-
 	 mMainDirectionalLight.mDirection = glm::normalize(glm::vec3(50,-30,0));
 
 	 CreateSceneObjects();
@@ -63,7 +62,7 @@ void Renderer::CreateGeometryDataMeshes()
 {
 	//mPlaneMesh.BuildGeomData(50,50);
 	//mMeshes["LightingCheckBoard"] = Mesh("LightingCheckBoard", std::string("./Resource/Model/LightingCheckBoard_smooth.obj"));
-	mMeshes["LightingCheckBoard"] = std::make_unique<Mesh>("LightingCheckBoard", std::string("./Resource/Model/LightingCheckBoard.fbx"));
+	mMeshes["LightingCheckBoard"] = std::make_unique<Mesh>("LightingCheckBoard", std::string("./Resource/Model/LightingCheckBoard_smooth.fbx"));
 }
 
 void Renderer::CreateVertexBufferObjects()
@@ -238,6 +237,9 @@ void Renderer::CreateSceneObjects()
 	mGameObjects["MainGeom"].SetMesh(mMeshes["LightingCheckBoard"].get());
 	mGameObjects["MainGeom"].SetPosition(glm::vec3(50,10,50));
 	mGameObjects["MainGeom"].SetScale(glm::vec3(1,1,1));
+	mGameObjects["MainGeom"].GetMaterial().SetColor(glm::vec3(0.3, 0.3, 0.3));
+	mGameObjects["MainGeom"].GetMaterial().SetSpecPower(32);
+	mGameObjects["MainGeom"].GetMaterial().SetSpecFactor(1);
 }
 
 void Renderer::CreateParticleLightTextureData()
@@ -589,9 +591,10 @@ void Renderer::DrawPlaneMesh()
 	glDisableVertexAttribArray(attribVertColor);
 }
 
-void Renderer::DrawSolidMesh()
+void Renderer::DrawSolidMesh(std::string _ObjectName)
 {
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
 	glDepthFunc(GL_LEQUAL);
 
 	GLuint shader = m_Shaders["SolidMesh"];
@@ -607,9 +610,16 @@ void Renderer::DrawSolidMesh()
 	GLuint mainDirLight_Color = glGetUniformLocation(shader, "dirLight.mLightColor");
 	GLuint mainDirLight_Dir = glGetUniformLocation(shader, "dirLight.mDirection");
 
+	GLuint materialDiffColor = glGetUniformLocation(shader, "u_material.mDiffuseColor");
+	GLuint materialSpecFactor = glGetUniformLocation(shader, "u_material.mSpecularFactor");
+	GLuint materialSpecPower = glGetUniformLocation(shader, "u_material.mSpecularPower");
+
+
+	GLuint ActiveInterpolate = glGetUniformLocation(shader, "u_bInterPolate");
+	GLuint ActiveTricubicInterpolate = glGetUniformLocation(shader, "u_bTricubicInterPolate");
 
 	glUniformMatrix4fv(projView, 1, GL_FALSE, &mCamera.GetProjViewMatrix()[0][0]);
-	glUniformMatrix4fv(model, 1, GL_FALSE, &mGameObjects["MainGeom"].GetTransform()->GetModelMatrix()[0][0]);
+	glUniformMatrix4fv(model, 1, GL_FALSE, &mGameObjects[_ObjectName].GetTransform()->GetModelMatrix()[0][0]);
 
 	glUniform3f(cameraPos, mCamera.GetCameraPos().x,
 		 mCamera.GetCameraPos().y,
@@ -622,7 +632,16 @@ void Renderer::DrawSolidMesh()
 		mMainDirectionalLight.mDirection.y, 
 		mMainDirectionalLight.mDirection.z);
 
+	glUniform3f(materialDiffColor, 
+		mGameObjects[_ObjectName].GetMaterial().mDiffuseColor.x,
+		mGameObjects[_ObjectName].GetMaterial().mDiffuseColor.y,
+		mGameObjects[_ObjectName].GetMaterial().mDiffuseColor.z);
 
+	glUniform1f(materialSpecFactor, mGameObjects[_ObjectName].GetMaterial().mSpecularFactor);
+	glUniform1f(materialSpecPower, mGameObjects[_ObjectName].GetMaterial().mSpecularPower);
+
+	glUniform1i(ActiveInterpolate, mbActiveTriInterPolate);
+	glUniform1i(ActiveTricubicInterpolate, mbUsingTricubicInterpolate);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleIntensity"]);
 	GLuint gTextureId = glGetUniformLocation(shader, "u_WorldIntensityTexture");
@@ -633,7 +652,7 @@ void Renderer::DrawSolidMesh()
 	glEnableVertexAttribArray(attribTexCoord);
 	glEnableVertexAttribArray(attribVertColor);
 
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBO["LightingCheckBoard"]);
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBO[mGameObjects[_ObjectName].GetMesh()->GetName()]);
 
 	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex) , 0);
 	glVertexAttribPointer(attribNormal, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex) , (GLvoid*)(sizeof(float) * 3));
@@ -641,11 +660,11 @@ void Renderer::DrawSolidMesh()
 	glVertexAttribPointer(attribVertColor, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex) , (GLvoid*)(sizeof(float) * 10));
 
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO["LightingCheckBoard"]);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO[mGameObjects[_ObjectName].GetMesh()->GetName()]);
 	glLineWidth(2);
 	
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_TRIANGLES);
-	glDrawElements(GL_TRIANGLES, mMeshes["LightingCheckBoard"]->GetIndicesVector().size()*2, GL_UNSIGNED_INT, 0);
+	//glPolygonMode(GL_FRONT, GL_TRIANGLES);
+	glDrawElements(GL_TRIANGLES, mMeshes[mGameObjects[_ObjectName].GetMesh()->GetName()]->GetIndicesVector().size(), GL_UNSIGNED_INT, 0);
 
 	//std::cout << "|" << m_VBO["LightingCheckBoard"] << " " << m_IBO["LightingCheckBoard"] << std::endl;
 	//std::cout << mMeshes["LightingCheckBoard"].GetIndicesVector().size() << std::endl;
@@ -660,6 +679,8 @@ void Renderer::DrawSolidMesh()
 
 void Renderer::SimulateParticle()
 {
+
+	if (!mbSimulatingParticle) return;
 	
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_SSBO["ParticlePosition"]);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, m_SSBO["ParticleVelocity"]);
@@ -819,6 +840,16 @@ void Renderer::Update()
 {
 	static float deltaTime = 0;
 	deltaTime += 0.016f;
+
+	mWindowStatString.clear();
+
+	if (mbActiveTriInterPolate)
+	{
+		mWindowStatString += "InterPolate ON | ";
+		if(mbUsingTricubicInterpolate) mWindowStatString += "Tricubic ON | ";
+	}
+		
+
 }
 
 void Renderer::CameraMove(glm::vec3 _velocity, float delta)
@@ -832,15 +863,25 @@ void Renderer::KeyInput(unsigned char key, int x, int y)
 	GetMainCamera().KeyInput(key, x, y);
 
 	switch (key) {
-	case 't': case 'T':
+	case 'p': case 'P':
 		mNumRenderingParticle = std::min(static_cast<int>(NUM_PARTICLES), mNumRenderingParticle*2);
 		break;
-	case 'g': case 'G':
+	case 'o': case 'O':
 		mNumRenderingParticle = std::max(1, static_cast<int>(mNumRenderingParticle * 0.5));
 
 		break;
 
+	case 'q': case 'Q':
+		mbSimulatingParticle = 1 - mbSimulatingParticle;
 
+		break;
+	case 't': case 'T':
+		mbActiveTriInterPolate = 1 - mbActiveTriInterPolate;
+
+		break;
+	case 'y': case 'Y':
+		mbUsingTricubicInterpolate = 1 - mbUsingTricubicInterpolate;
+		break;
 	}
 
 
