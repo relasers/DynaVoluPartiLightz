@@ -5,5 +5,5 @@ varying vec3 v_Pos;
 
 void main()
 {
-	FragColor = vec4(v_Pos, 1);
+	FragColor = vec4(v_Pos, 0.4f);
 }

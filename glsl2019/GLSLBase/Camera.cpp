@@ -76,6 +76,12 @@ void Camera::KeyInput(unsigned char key, int x, int y)
 	case 'd': case 'D':
 		m_vPos += m_vRight * weight;
 		break;
+	case 'r':
+		m_vPos += m_vUp * weight;
+		break;
+	case 'f':
+		m_vPos += -m_vUp * weight;
+		break;
 	}
 	RegenerateProjView();
 }

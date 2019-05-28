@@ -17,7 +17,7 @@ uniform sampler2D u_CDTexTure;
 
 const float g_tick = 0.0166666666666667f;
 const int texel_collide_range = 30;
-const vec3 g_gravity = vec3(0, -0.0001, 0);
+const vec3 g_gravity = vec3(0, -0.00005, 0);
 
 void main() {
 
@@ -33,14 +33,17 @@ void main() {
 
 	if (curr_pos.w > 0.5f){
 		float min_length = 10000.0f;
-		for (int ty = -texel_collide_range; ty <= texel_collide_range; ++ty){
+
+		if (a_CollideTime <= 0)
+		{
+			for (int ty = -texel_collide_range; ty <= texel_collide_range; ++ty){
 			for (int tx = -texel_collide_range; tx <= texel_collide_range; ++tx){
 				if (0 == tx && 0 == ty) continue;
 				vec4 pos = texelFetch(u_CDTexTure, texel_base + ivec2(tx, ty), 0);
 
 				float len = length(curr_pos.xyz - pos.xyz);
 				//if (pos.w > 0.5f && 0.00095f > len) {
-				if (pos.w > 0.5f && 0.002f > len) {
+				if (pos.w > 0.3f && 0.002f > len) {
 					if (len < min_length) {
 						min_length = len;
 						collide_pos = pos;
@@ -49,15 +52,21 @@ void main() {
 				}
 			}
 		}
+		}
 	}
 	
 	if (Collide)
 	{
-		f_Speed = a_Speed * 0.5f;
+		f_Speed = a_Speed * 0.8f;
 		v_Dir = normalize(curr_pos.xyz - collide_pos.xyz);
 		//v_Dir = reflect(a_Dir, vec3(0,1,0));
-		f_CollideTime = 1.0f;
-		v_Pos = a_Pos + (v_Dir * f_Speed) * 0.1f;
+		f_CollideTime = 0.1f;
+		if (collide_pos.w < 0.5f) {
+			//f_Speed = 0.0f;
+		}
+		else {
+			v_Pos = a_Pos + (v_Dir * f_Speed) * 0.1f;
+		}
 	}
 	else
 	{
