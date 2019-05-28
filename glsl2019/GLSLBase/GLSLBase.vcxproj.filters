@@ -23,7 +23,7 @@
       <Filter>Geometry\Mesh</Filter>
     </ClCompile>
     <ClCompile Include="GameObject.cpp">
-      <Filter>Geometry\GameObject</Filter>
+      <Filter>Object\GameObject</Filter>
     </ClCompile>
     <ClCompile Include="Transform.cpp">
       <Filter>Geometry\Transform</Filter>
@@ -32,7 +32,10 @@
       <Filter>Geometry\VertexData</Filter>
     </ClCompile>
     <ClCompile Include="Light.cpp">
-      <Filter>Geometry\Light</Filter>
+      <Filter>Light</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendertarget.cpp">
+      <Filter>Object\Rendertarget</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -58,7 +61,7 @@
       <Filter>Geometry\Mesh</Filter>
     </ClInclude>
     <ClInclude Include="GameObject.h">
-      <Filter>Geometry\GameObject</Filter>
+      <Filter>Object\GameObject</Filter>
     </ClInclude>
     <ClInclude Include="Transform.h">
       <Filter>Geometry\Transform</Filter>
@@ -67,7 +70,10 @@
       <Filter>Geometry\VertexData</Filter>
     </ClInclude>
     <ClInclude Include="Light.h">
-      <Filter>Geometry\Light</Filter>
+      <Filter>Light</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendertarget.h">
+      <Filter>Object\Rendertarget</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -172,17 +178,23 @@
     <Filter Include="Geometry\Transform">
       <UniqueIdentifier>{5bce2861-1ce4-4b17-9dbc-25f897fe1a2d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Geometry\GameObject">
-      <UniqueIdentifier>{4b038c27-5386-4800-8190-60bb3569b9e2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Renderer\Shader\SolidMesh">
       <UniqueIdentifier>{32d65c67-3b1b-42e9-bb2b-9f04ce2e4ebd}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Geometry\Light">
-      <UniqueIdentifier>{06db13e0-dc27-482b-b1e2-c350502cfc83}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Renderer\Shader\SolidMeshCD">
       <UniqueIdentifier>{fe42534f-6dde-407b-a1fa-dcd5e9abf071}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Light">
+      <UniqueIdentifier>{06db13e0-dc27-482b-b1e2-c350502cfc83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object">
+      <UniqueIdentifier>{6088b20d-6ffc-4a4a-93b1-2b287f7c8418}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\GameObject">
+      <UniqueIdentifier>{4b038c27-5386-4800-8190-60bb3569b9e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Rendertarget">
+      <UniqueIdentifier>{f265f099-b2fe-4ece-8185-ff5e69360755}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

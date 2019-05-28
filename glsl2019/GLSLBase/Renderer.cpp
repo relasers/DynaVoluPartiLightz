@@ -253,8 +253,6 @@ void Renderer::DrawParticles()
 void Renderer::DrawToFrameBufferTest(GLuint frame_buffer_id)
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, m_pFBOs[(m_CurrTFO + 1) % m_nTFOs]);
-	GLenum drawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
-	glDrawBuffers(1, drawBuffers);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	

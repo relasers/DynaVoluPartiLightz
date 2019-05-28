@@ -10,14 +10,14 @@
 #include <iostream>
 #include <fstream>
 #include <cassert>
-#include <string>
 #include <cfloat>
 #include <cstdint>
+#include <cmath>
 #include <random>
-#include <unordered_map>
-#include <string>
-#include <math.h>
 #include <algorithm>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 // OpenGL 라이브러리
 #include "Dependencies\glew.h"
