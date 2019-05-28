@@ -37,9 +37,7 @@ struct Material
 
 
 
-uniform sampler3D u_WorldParticleLightDirection;
-uniform sampler3D u_WorldParticleLightColor;
-
+uniform sampler3D u_WorldIntensityTexture;
 uniform DirectionalLight dirLight;
 uniform Material u_material;
 
@@ -248,42 +246,39 @@ void main()
 	newCoord1 /= dim_of_texture;
 
 
-	vec4 interpolatedDirection;
-	vec4 interpolatedColor;
+	vec4 interpolatedValue;
 	if(u_bTricubicInterPolate)
 	{
-		interpolatedDirection = TriCubicInterpolation(u_WorldParticleLightDirection,newCoord0,unit_per_dim);
-		interpolatedColor = TriCubicInterpolation(u_WorldParticleLightColor,newCoord0,unit_per_dim);
+		interpolatedValue = TriCubicInterpolation(u_WorldIntensityTexture,newCoord0,unit_per_dim);
 	}
 	else
 	{
-		interpolatedDirection = TrilinearInterpolation(u_WorldParticleLightDirection,newCoord0,unit_per_dim);
-		interpolatedColor = TrilinearInterpolation(u_WorldParticleLightColor,newCoord0,unit_per_dim);
+		interpolatedValue = TrilinearInterpolation(u_WorldIntensityTexture,newCoord0,unit_per_dim);
 	}
 
 
-	vec4 ParticleLightColor;
+	float ParticleIntensity;
 	vec3 ParticleLightVec;
 	// Calculate Particle Light Diffuse
 	if(u_bInterPolate)
 	{
-		ParticleLightVec = normalize(interpolatedDirection.xyz);
-		ParticleLightColor = interpolatedColor.xyzw;
+		ParticleIntensity = interpolatedValue.a;
+		ParticleLightVec = normalize(interpolatedValue.xyz);
 	}
 	else
 	{
-		ParticleLightVec = normalize(texture (u_WorldParticleLightDirection,new_coord).xyz);
-		ParticleLightColor = texture (u_WorldParticleLightColor,new_coord).xyzw;
+		ParticleIntensity = texture (u_WorldIntensityTexture,new_coord).a;
+		ParticleLightVec = normalize(texture (u_WorldIntensityTexture,new_coord).xyz);
 	}
 	
-	FragColor.xyz += vec3(ParticleLightColor.rgb) * ParticleLightColor.a;
+	FragColor.xyz += ParticleIntensity;
 	// calc Half vector
-	vec3 HalfVec = normalize(ParticleLightVec.xyz + v_viewDir);
+	vec3 HalfVec = normalize(ParticleLightVec + v_viewDir);
 	// N dot H
 	float NdotH = dot(HalfVec,v_Normal);
 	float SpecIntensity = pow( max( NdotH, 0 ), u_material.mSpecularPower );
 
-	//FragColor.xyz += SpecIntensity * vec3(1,1,1);
+	FragColor.xyz += ParticleIntensity * SpecIntensity * vec3(1,1,1);
 
 	//FragColor.x = ;
 	//FragColor = vec4(1,1,1,1);

@@ -10,7 +10,10 @@ layout( std140, binding= 5 ) buffer ParticleVelocity
 {
 	vec4 Velocities[];
 };
-
+layout( std140, binding= 6 ) buffer ParticleColor
+{
+	vec4 Colors[];
+};
 
 
 layout( local_size_x = 128, local_size_y = 1, local_size_z = 1) in;

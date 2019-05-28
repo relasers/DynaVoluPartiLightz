@@ -10,17 +10,8 @@ struct ParticleVelocity
 	glm::float4 mVelocity;
 };
 
-struct ParticleLightColor
+struct ParticleColor
 {
-	// r,g,b,intensity
-	glm::float4 mLightColor;
+	glm::float4 mColor;
 };
 
-struct ParticleRangeAtten
-{
-	// atten0, atten1, atten2 , range
-	glm::float4 mAttenRange;
-};
-
-//ParticleLightColor
-//ParticleRangeAtten
