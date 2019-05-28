@@ -23,14 +23,11 @@ void main()
 {
 	vec4 newpos = gl_in[0].gl_Position;
 
-	outPos = v_Pos[0];
-	outDir = v_Dir[0];
-	outSpeed = f_Speed[0];
-	outCollideTime = f_CollideTime[0];
-	v_oPos = v_Pos[0];
-	v_oDir = v_Dir[0];
-	f_oSpeed = f_Speed[0];
-	f_oCollideTime = f_CollideTime[0];
+	v_oPos = outPos = v_Pos[0];
+	v_oDir = outDir = v_Dir[0];
+	f_oSpeed = outSpeed = f_Speed[0];
+	f_oCollideTime = outCollideTime = f_CollideTime[0];
+
 	gl_Position = newpos;
 	EmitVertex();
 

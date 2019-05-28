@@ -9,5 +9,5 @@ in float f_oCollideTime;
 
 void main()
 {
-	FragColor = vec4(1, v_oPos);
+	FragColor = vec4(v_oPos, 1);
 }

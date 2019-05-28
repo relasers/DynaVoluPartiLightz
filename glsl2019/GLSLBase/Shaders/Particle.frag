@@ -7,6 +7,9 @@ in vec3 v_Dir;
 in float f_Speed;
 in float f_CollideTime;
 
+in vec4 v_TexelColor;
+
+
 void main()
 {
 	if (0 < f_CollideTime)

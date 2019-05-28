@@ -23,17 +23,17 @@ float g_RunRate = 0.0f;
 void RenderScene(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
 	// Render
 	//g_Renderer->DrawRect(0.5f);
 	//g_Renderer->DrawPageTurning(glm::vec3(0, 1, 0), 1.0f, g_RunRate);
 	//g_Renderer->DrawParticleCDTexture();
 	//g_Renderer->DrawParticles();
-	//g_Renderer->DrawToFrameBufferTest(0);
+	g_Renderer->DrawToFrameBufferTest(0);
 
-	g_Renderer->DrawCubeMesh();
-
+	//g_Renderer->DrawCubeMesh();
+	//g_Renderer->DrawCubeMeshCDTexture();
 	glutSwapBuffers();
 }
 

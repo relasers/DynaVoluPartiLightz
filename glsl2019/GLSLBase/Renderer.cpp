@@ -162,9 +162,9 @@ void Renderer::DrawParticleCDTexture()
 	GLuint ClientHeightId = glGetUniformLocation(m_ParticleCDShader, "u_ClientHeight");
 	glUniform1i(ClientHeightId, g_ClientHeight);
 
-	glUniform1i(glGetUniformLocation(m_PageTurningShader, "u_CDTexTure"), 0);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_pRenderTargets[1]);
+	glBindTexture(GL_TEXTURE_2D, m_pRenderTargets[m_CurrTFO]);
+	glUniform1i(glGetUniformLocation(m_ParticleCDShader, "u_CDTexTure"), 0);
 
 	GLint aPos = glGetAttribLocation(m_ParticleCDShader, "a_Pos");
 	GLint aDir = glGetAttribLocation(m_ParticleCDShader, "a_Dir");
@@ -203,8 +203,8 @@ void Renderer::DrawParticleCDTexture()
 	glDisableVertexAttribArray(aDir);
 	glDisableVertexAttribArray(aSpeed);
 	glDisableVertexAttribArray(aCollideTime);
+	glDisable(GL_TEXTURE0);
 
-	m_CurrTFO = (m_CurrTFO + 1) % m_nTFOs;
 }
 void Renderer::DrawParticles()
 {
@@ -215,10 +215,19 @@ void Renderer::DrawParticles()
 		glUniformMatrix4fv(gProjViewId, 1, GL_FALSE, &m_pCamera->GetProjView()[0][0]);
 	}
 
+	GLuint ClientWidthId = glGetUniformLocation(m_ParticleShader, "u_ClientWidth");
+	glUniform1i(ClientWidthId, g_ClientWidth);
+	GLuint ClientHeightId = glGetUniformLocation(m_ParticleShader, "u_ClientHeight");
+	glUniform1i(ClientHeightId, g_ClientHeight);
+
 	GLint aPos = glGetAttribLocation(m_ParticleShader, "a_Pos");
 	GLint aDir = glGetAttribLocation(m_ParticleShader, "a_Dir");
 	GLint aSpeed = glGetAttribLocation(m_ParticleShader, "a_Speed");
 	GLint aCollideTime = glGetAttribLocation(m_ParticleShader, "a_CollideTime");
+
+	glUniform1i(glGetUniformLocation(m_ParticleShader, "u_CDTexTure"), 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_pRenderTargets[m_CurrTFO]);
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_pTFOs[m_CurrTFO].buf);
 
@@ -239,22 +248,31 @@ void Renderer::DrawParticles()
 	glDisableVertexAttribArray(aDir);
 	glDisableVertexAttribArray(aSpeed);
 	glDisableVertexAttribArray(aCollideTime);
+	glDisable(GL_TEXTURE0);
 }
 void Renderer::DrawToFrameBufferTest(GLuint frame_buffer_id)
 {
-	glBindFramebuffer(GL_FRAMEBUFFER, m_pFBOs[frame_buffer_id]);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_pFBOs[(m_CurrTFO + 1) % m_nTFOs]);
 	GLenum drawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
 	glDrawBuffers(1, drawBuffers);
-
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClearDepth(1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	
+	glEnable(GL_DEPTH_TEST);
 
+	DrawCubeMeshCDTexture();
 	DrawParticleCDTexture();
 
+	m_CurrTFO = (m_CurrTFO + 1) % m_nTFOs;
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+	DrawCubeMesh();
 	DrawParticles();
-	DumpTexture(m_pRenderTargets[1], 0, 0, 200, 200);
+
+	DumpTexture(m_pRenderTargets[m_CurrTFO], 0, 0, 200, 200);
 }
 
 void Renderer::DumpTexture(GLuint tex_id, GLuint x, GLuint y, GLuint w, GLuint h)
@@ -285,9 +303,6 @@ void Renderer::DumpTexture(GLuint tex_id, GLuint x, GLuint y, GLuint w, GLuint h
 
 void Renderer::DrawCubeMesh()
 {
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-
 	GLuint shader = m_MeshShader;
 	glUseProgram(shader);
 
@@ -297,14 +312,14 @@ void Renderer::DrawCubeMesh()
 	int attribVertColor = glGetAttribLocation(shader, "a_VertColor");
 
 	GLuint projView = glGetUniformLocation(shader, "u_ProjView");
-	GLuint model = glGetUniformLocation(shader, "u_Model");
+	GLuint world = glGetUniformLocation(shader, "u_World");
 
 	GLuint cameraPos = glGetUniformLocation(shader, "u_CameraPos");
 	GLuint mainDirLight_Color = glGetUniformLocation(shader, "dirLight.mLightColor");
 	GLuint mainDirLight_Dir = glGetUniformLocation(shader, "dirLight.mDirection");
 
 	glUniformMatrix4fv(projView, 1, GL_FALSE, &m_pCamera->GetProjView()[0][0]);
-	glUniformMatrix4fv(model, 1, GL_FALSE, &m_GameObjects["Cube"].GetTransform()->GetModelMatrix()[0][0]);
+	glUniformMatrix4fv(world, 1, GL_FALSE, &m_GameObjects[OBJECT_TYPE::CUBE].GetTransform()->GetModelMatrix()[0][0]);
 
 	glUniform3f(cameraPos, 
 		m_pCamera->GetPos().x,
@@ -327,24 +342,57 @@ void Renderer::DrawCubeMesh()
 	glEnableVertexAttribArray(attribTexCoord);
 	glEnableVertexAttribArray(attribVertColor);
 
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBO["Cube"]);
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBO[OBJECT_TYPE::CUBE]);
 
 	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 14, 0);
 	glVertexAttribPointer(attribNormal, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 14, (GLvoid*)(sizeof(float) * 3));
 	glVertexAttribPointer(attribTexCoord, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 14, (GLvoid*)(sizeof(float) * 6));
 	glVertexAttribPointer(attribVertColor, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 14, (GLvoid*)(sizeof(float) * 10));
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO["Cube"]);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO[OBJECT_TYPE::CUBE]);
 	glLineWidth(2);
 
-	glDrawElements(GL_TRIANGLES, m_Meshes["Cube"]->GetIndicesVector().size() * 2, GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, m_Meshes[OBJECT_TYPE::CUBE]->GetIndicesVector().size(), GL_UNSIGNED_INT, 0);
 
 	glDisableVertexAttribArray(attribPosition);
 	glDisableVertexAttribArray(attribNormal);
 	glDisableVertexAttribArray(attribTexCoord);
 	glDisableVertexAttribArray(attribVertColor);
 
-	glDisable(GL_DEPTH_TEST);
+}
+void Renderer::DrawCubeMeshCDTexture()
+{
+	GLuint shader = m_MeshCDShader;
+	glUseProgram(shader);
+
+	int attribPosition = glGetAttribLocation(shader, "a_Position");
+
+	GLuint projView = glGetUniformLocation(shader, "u_ProjView");
+	GLuint world = glGetUniformLocation(shader, "u_World");
+
+	GLuint cameraPos = glGetUniformLocation(shader, "u_CameraPos");
+
+	glUniformMatrix4fv(projView, 1, GL_FALSE, &m_pCamera->GetProjView()[0][0]);
+	glUniformMatrix4fv(world, 1, GL_FALSE, &m_GameObjects[OBJECT_TYPE::CUBE].GetTransform()->GetModelMatrix()[0][0]);
+
+	glUniform3f(cameraPos,
+		m_pCamera->GetPos().x,
+		m_pCamera->GetPos().y,
+		m_pCamera->GetPos().z);
+
+
+	glEnableVertexAttribArray(attribPosition);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBO[OBJECT_TYPE::CUBE]);
+
+	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 14, 0);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO[OBJECT_TYPE::CUBE]);
+
+	glDrawElements(GL_TRIANGLES, m_Meshes[OBJECT_TYPE::CUBE]->GetIndicesVector().size(), GL_UNSIGNED_INT, 0);
+
+	glDisableVertexAttribArray(attribPosition);
+
 }
 
 void Renderer::Init(unsigned int client_width, unsigned int client_height)
@@ -361,6 +409,7 @@ void Renderer::Init(unsigned int client_width, unsigned int client_height)
 	//m_ParticleShader = CompileShaders("./Shaders/Particle.vert", "./Shaders/Particle.geom", "./Shaders/Particle.frag");
 	m_ParticleShader = CompileShaders("./Shaders/Particle.vert", "./Shaders/Particle.frag");
 	m_MeshShader = CompileShaders("./Shaders/SolidMesh.vert", "./Shaders/SolidMesh.frag");
+	m_MeshCDShader = CompileShaders("./Shaders/SolidMeshCD.vert", "./Shaders/SolidMeshCD.frag");
 	
 	// Load textures
 	m_nTextures = 2;
@@ -388,7 +437,6 @@ void Renderer::Init(unsigned int client_width, unsigned int client_height)
 
 	// GameObject
 	CreateSceneObjects();
-
 }
 
 bool Renderer::ReadFile(std::string& out_data, const char* filename)
@@ -631,7 +679,7 @@ unsigned char* Renderer::loadBMPRaw(const char * img_path, unsigned int& outWidt
 
 void Renderer::CreateGeometryMeshDatas()
 {
-	m_Meshes["Cube"] = std::make_unique<Mesh>("Cube", std::string("./Resource/Model/mainGeom.fbx"));
+	m_Meshes[OBJECT_TYPE::CUBE] = std::make_unique<Mesh>("Cube", std::string("./Resource/Model/mainGeom.fbx"));
 }
 
 void Renderer::CreateRectVBO()
@@ -726,11 +774,32 @@ void Renderer::CreateParticleTFO()
 		glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, m_pTFOs[i].tf);
 		glBindBuffer(GL_ARRAY_BUFFER, m_pTFOs[i].buf);
 
-		m_pTFOs[i].count = 100000;
+		m_pTFOs[i].count = 20000;
 		std::vector<Vertex> particles;
-		for (int j = 0; j < m_pTFOs[i].count; ++j) {
-			particles.emplace_back();
+		//for (int j = 0; j < m_pTFOs[i].count; ++j) {
+		//	particles.emplace_back();
+		//}
+		Vertex vertex;
+		for (int i = 0; i < 10000; ++i) {
+			vertex.pos = glm::vec3(RAND_FLOAT(0.15f, 0.25f), RAND_FLOAT(-0.2f, 0.2f), RAND_FLOAT(-0.2f, 0.2f));
+			vertex.dir = glm::vec3(-1.0f, 0, 0);
+			vertex.speed = 0.02f;
+			particles.push_back(vertex);
 		}
+		for (int i = 0; i < 10000; ++i) {
+			vertex.pos = glm::vec3(-RAND_FLOAT(0.15f, 0.25f), RAND_FLOAT(-0.2f, 0.2f), RAND_FLOAT(-0.2f, 0.2f));
+			vertex.dir = glm::vec3(1.0f, 0, 0);
+			vertex.speed = 0.02f;
+			particles.push_back(vertex);
+		}
+		//vertex.pos = glm::vec3(0.0f, 0, 0);
+		//vertex.dir = glm::vec3(0.0f, 0, 0);
+		//vertex.speed = 0.0f;
+		//particles.push_back(vertex);
+		//vertex.pos = glm::vec3(-0.1f, 0, 0);
+		//vertex.dir = glm::vec3(1.0f, 0, 0);
+		//vertex.speed = 0.01f;
+		//particles.push_back(vertex);
 
 		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * m_pTFOs[i].count, particles.data(), GL_DYNAMIC_DRAW);
 		glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, m_pTFOs[i].buf);
@@ -739,8 +808,7 @@ void Renderer::CreateParticleTFO()
 
 void Renderer::CreateVBOandIBObyLoadMeshs()
 {
-	for (auto& p : m_Meshes)
-	{
+	for (auto& p : m_Meshes) {
 		GLuint VBO;
 		GLuint IBO;
 
@@ -761,10 +829,10 @@ void Renderer::CreateVBOandIBObyLoadMeshs()
 void Renderer::CreateSceneObjects()
 {
 	GameObject Cube;
-	m_GameObjects["Cube"] = Cube;
-	m_GameObjects["Cube"].SetMesh(m_Meshes["Cube"].get());
-	m_GameObjects["Cube"].SetPosition(glm::vec3(0,-1,0));
-	m_GameObjects["Cube"].SetScale(glm::vec3(0.3f, 0.1f, 0.1f));
+	m_GameObjects[OBJECT_TYPE::CUBE] = Cube;
+	m_GameObjects[OBJECT_TYPE::CUBE].SetMesh(m_Meshes[OBJECT_TYPE::CUBE].get());
+	m_GameObjects[OBJECT_TYPE::CUBE].SetPosition(glm::vec3(0, -0.5f, -0.5f));
+	m_GameObjects[OBJECT_TYPE::CUBE].SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
 }
 
 
@@ -773,39 +841,43 @@ void Renderer::CreateFrameResources()
 	// RenderTargets
 	m_nRenderTargets = 2;
 	m_pRenderTargets = new GLuint[m_nRenderTargets];
-	{
-		glGenTextures(1, &m_pRenderTargets[0]);
-		glBindTexture(GL_TEXTURE_2D, m_pRenderTargets[0]);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_ClientWidth, m_ClientHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	
+	glGenTextures(1, &m_pRenderTargets[0]);
+	glBindTexture(GL_TEXTURE_2D, m_pRenderTargets[0]);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, m_ClientWidth, m_ClientHeight, 0, GL_RGBA, GL_FLOAT, 0);
 
-		glGenTextures(1, &m_pRenderTargets[1]);
-		glBindTexture(GL_TEXTURE_2D, m_pRenderTargets[1]);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, m_ClientWidth, m_ClientHeight, 0, GL_RGBA, GL_FLOAT, 0);
-	}
+	glGenTextures(1, &m_pRenderTargets[1]);
+	glBindTexture(GL_TEXTURE_2D, m_pRenderTargets[1]);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, m_ClientWidth, m_ClientHeight, 0, GL_RGBA, GL_FLOAT, 0);
 
 	// Depth Buffer
-	m_nDepthBuffers = 1;
+	m_nDepthBuffers = 2;
 	m_pDepthBuffers = new GLuint[m_nDepthBuffers];
-	//for (int i = 0; i < m_nDepthBuffers; ++i) {
-	//	glGenTextures(1, &m_pDepthBuffers[i]);
-	//	glBindTexture(GL_TEXTURE_2D, m_pDepthBuffers[i]);
-	//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, m_ClientWidth, m_ClientHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
-	//}
+	for (int i = 0; i < m_nDepthBuffers; ++i) {
+		glGenTextures(1, &m_pDepthBuffers[i]);
+		glBindTexture(GL_TEXTURE_2D, m_pDepthBuffers[i]);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, m_ClientWidth, m_ClientHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+	}
 
 	// FBO
-	m_nFBOs = 1;
+	m_nFBOs = 2;
 	m_pFBOs = new GLuint[m_nFBOs];
 	glGenFramebuffers(1, &m_pFBOs[0]);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_pFBOs[0]);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_pRenderTargets[1], 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_pRenderTargets[0], 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_pDepthBuffers[0], 0);
 
-	//glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_TEX_DEPTH, 0);
+	glGenFramebuffers(1, &m_pFBOs[1]);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_pFBOs[1]);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_pRenderTargets[1], 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_pDepthBuffers[1], 0);
+
 
 	GLenum error = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (error != GL_FRAMEBUFFER_COMPLETE) {

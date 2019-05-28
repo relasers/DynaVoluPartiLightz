@@ -194,6 +194,8 @@
     <None Include="Shaders\ProxyGeometry.vert" />
     <None Include="Shaders\SolidMesh.frag" />
     <None Include="Shaders\SolidMesh.vert" />
+    <None Include="Shaders\SolidMeshCD.frag" />
+    <None Include="Shaders\SolidMeshCD.vert" />
     <None Include="Shaders\SolidRect.frag" />
     <None Include="Shaders\SolidRect.vert" />
     <None Include="Shaders\TextureDump.frag" />

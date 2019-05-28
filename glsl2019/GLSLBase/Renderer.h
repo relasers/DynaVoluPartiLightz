@@ -7,6 +7,7 @@ class GameObject;
 
 class Renderer {
 public:
+	enum class OBJECT_TYPE{ CUBE };
 	struct VBO {
 		GLuint buf;
 		GLuint count;
@@ -37,6 +38,7 @@ public:
 	void DumpTexture(GLuint tex_id, GLuint x, GLuint y, GLuint w, GLuint h);
 
 	void DrawCubeMesh();
+	void DrawCubeMeshCDTexture();
 
 private:
 	void Init(unsigned int client_width, unsigned int client_height);
@@ -58,8 +60,6 @@ private:
 	void CreateSceneObjects();
 
 	void CreateFrameResources();
-
-
 
 private:
 	bool						m_bInit;
@@ -95,13 +95,13 @@ private:
 	GLuint*						m_pDepthBuffers;
 
 	//Mesh Object
-	GLuint m_MeshShader;
+	GLuint						m_MeshShader;
+	GLuint						m_MeshCDShader;
 
-	std::unordered_map < std::string, std::unique_ptr<Mesh> > m_Meshes;
-	std::unordered_map < std::string, GameObject> m_GameObjects;
-
-	std::unordered_map < std::string, GLuint > m_VBO;
-	std::unordered_map < std::string, GLuint > m_IBO;
+	std::unordered_map<OBJECT_TYPE, std::unique_ptr<Mesh>>	m_Meshes;
+	std::unordered_map<OBJECT_TYPE, GameObject>				m_GameObjects;
+	std::unordered_map<OBJECT_TYPE, GLuint>					m_VBO;
+	std::unordered_map<OBJECT_TYPE, GLuint>					m_IBO;
 
 	// Light
 	DirectionalLight m_MainDirectionalLight;

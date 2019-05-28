@@ -113,6 +113,12 @@
     <None Include="Shaders\SolidMesh.vert">
       <Filter>Renderer\Shader\SolidMesh</Filter>
     </None>
+    <None Include="Shaders\SolidMeshCD.frag">
+      <Filter>Renderer\Shader\SolidMeshCD</Filter>
+    </None>
+    <None Include="Shaders\SolidMeshCD.vert">
+      <Filter>Renderer\Shader\SolidMeshCD</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source">
@@ -174,6 +180,9 @@
     </Filter>
     <Filter Include="Geometry\Light">
       <UniqueIdentifier>{06db13e0-dc27-482b-b1e2-c350502cfc83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Shader\SolidMeshCD">
+      <UniqueIdentifier>{fe42534f-6dde-407b-a1fa-dcd5e9abf071}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

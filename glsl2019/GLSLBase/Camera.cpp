@@ -3,13 +3,13 @@
 
 Camera::Camera()
 	: m_vUp			{ glm::vec3(0.0f, 1.0f, 0.0f) }
-	, m_vLook		{ glm::vec3(0.0f, 0.0f, -1.0f) }
+	, m_vLook		{ glm::vec3(0.0f, -0.2f, -1.0f) }
 	, m_vRight		{ glm::vec3(1.0f, 0.0f, 0.0f) }
-	, m_vPos		{ glm::vec3(0.0f, 0.0f, 1.5f) }
+	, m_vPos		{ glm::vec3(0.0f, 0.0f, 0.6f) }
 	, m_ProjType	{ ProjType ::Perspective }
 	, m_fFovy		{ 45.0f }
 	, m_fAspect		{ static_cast<float>(g_ClientWidth) / static_cast<float>(g_ClientHeight) }
-	, m_fNear		{ 1.0f }
+	, m_fNear		{ 0.05f }
 	, m_fFar		{ 1000.0f }
 {
 	GenerateProjView(m_ProjType);
@@ -62,7 +62,7 @@ void Camera::Rotate(const glm::vec3& vAxis, float fAngle)
 
 void Camera::KeyInput(unsigned char key, int x, int y)
 {
-	static const float weight = 0.5f;
+	static const float weight = 0.05f;
 	switch (key) {
 	case 'w': case 'W':
 		m_vPos += m_vLook * weight;

@@ -1,6 +1,5 @@
 #version 450
-struct DirectionalLight
-{
+struct DirectionalLight {
 	vec4 mLightColor;
 	vec3 mDirection;
 };
@@ -8,7 +7,12 @@ struct DirectionalLight
 layout(location=0) out vec4 FragColor;
 
 uniform DirectionalLight dirLight;
+
+in vec4 v_Color;
+in vec3 v_Normal;
+in vec3 v_viewDir;
 in vec4 v_WorldPosition;
+
 const int shininess = 32;
 
 vec3 CalcDirLight(DirectionalLight light, vec3 normal, vec3 viewDir)
@@ -23,12 +27,10 @@ vec3 CalcDirLight(DirectionalLight light, vec3 normal, vec3 viewDir)
     return vec3(diff + spec);
 }
 
-in vec4 v_Color;
-in vec3 v_Normal;
-in vec3 v_viewDir;
 
 void main()
 {
-	FragColor = vec4(0.5f,0.5f,0.5f,1.0f);
-	FragColor.xyz *= CalcDirLight(dirLight,v_Normal,v_viewDir);
+	FragColor = vec4(0.1, 0.1, 0.1, 0);
+	FragColor += vec4(CalcDirLight(dirLight,v_Normal,v_viewDir), 1);
+	//FragColor.xyzw = vec4(1);
 }
