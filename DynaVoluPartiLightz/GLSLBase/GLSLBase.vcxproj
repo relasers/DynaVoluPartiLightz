@@ -197,6 +197,8 @@
     <None Include="Shaders\BasicParticle.vert" />
     <None Include="Shaders\BasicTexture.frag" />
     <None Include="Shaders\BasicTexture.vert" />
+    <None Include="Shaders\DeferedLightPass.frag" />
+    <None Include="Shaders\DeferedLightPass.vert" />
     <None Include="Shaders\ParticleSimulate.comp" />
     <None Include="Shaders\ParticleWorldIntensityClear.comp" />
     <None Include="Shaders\ParticleWorldIntensityUpdate.comp" />

@@ -31,7 +31,8 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 	m_Shaders["SolidMesh"] = CompileShaders("./Shaders/SolidMesh.vert", "./Shaders/SolidMesh.frag");
 
 	m_Shaders["BasicTexture"] = CompileShaders("./Shaders/BasicTexture.vert", "./Shaders/BasicTexture.frag");
-	
+	m_Shaders["DeferedLightPass"] = CompileShaders("./Shaders/DeferedLightPass.vert", "./Shaders/DeferedLightPass.frag");
+
 	m_Shaders["BasicParticle"] = CompileShaders("./Shaders/BasicParticle.vert", "./Shaders/BasicParticle.frag");
 	m_Shaders["ParticleSimulate"] = CompileComputeShaders("./Shaders/ParticleSimulate.comp");
 	m_Shaders["ParticleWorldIntensityClear"] = CompileComputeShaders("./Shaders/ParticleWorldIntensityClear.comp");
@@ -116,32 +117,75 @@ void Renderer::CreateTextureDrawResource()
 
 void Renderer::CreateFrameBufferObjects()
 {
-	m_Texture["TexP1"] = 0;
-	m_Texture["TexP1Depth"] = 0;
-	m_FBO["FrameBufferP1"] = 0;
+	m_Texture["FragColor"] = 0;
+	m_Texture["BrightColor"] = 0;
+	m_Texture["WorldPosition"] = 0;
+	m_Texture["WorldNormal"] = 0;
+	m_Texture["ViewDir"] = 0;
+	m_Texture["SpecData"] = 0;
+	m_Texture["OutputDepth"] = 0;
+	m_FBO["GBUFFER"] = 0;
 
 	m_Texture["WorldParticleLightIntensity"] = 0;
 
-	glGenTextures(1, &m_Texture["TexP1"]);
-	glBindTexture(GL_TEXTURE_2D, m_Texture["TexP1"]);
+	glGenTextures(1, &m_Texture["FragColor"]);
+	glBindTexture(GL_TEXTURE_2D, m_Texture["FragColor"]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	// 이때는 메모리 할당만 시행한다.
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_WindowSizeX, m_WindowSizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_Texture["FragColor"], 0);
 
-	glGenTextures(1, &m_Texture["TexP1Depth"]);
-	glBindTexture(GL_TEXTURE_2D, m_Texture["TexP1Depth"]);
+	glGenTextures(1, &m_Texture["BrightColor"]);
+	glBindTexture(GL_TEXTURE_2D, m_Texture["BrightColor"]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_WindowSizeX, m_WindowSizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_Texture["BrightColor"], 0);
+
+	glGenTextures(1, &m_Texture["WorldPosition"]);
+	glBindTexture(GL_TEXTURE_2D, m_Texture["WorldPosition"]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_WindowSizeX, m_WindowSizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, m_Texture["WorldPosition"], 0);
+
+	glGenTextures(1, &m_Texture["WorldNormal"]);
+	glBindTexture(GL_TEXTURE_2D, m_Texture["WorldNormal"]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_WindowSizeX, m_WindowSizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, m_Texture["WorldNormal"], 0);
+
+	glGenTextures(1, &m_Texture["ViewDir"]);
+	glBindTexture(GL_TEXTURE_2D, m_Texture["ViewDir"]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_WindowSizeX, m_WindowSizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, m_Texture["ViewDir"], 0);
+
+	glGenTextures(1, &m_Texture["SpecData"]);
+	glBindTexture(GL_TEXTURE_2D, m_Texture["SpecData"]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_WindowSizeX, m_WindowSizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, GL_TEXTURE_2D, m_Texture["SpecData"], 0);
+
+	glGenTextures(1, &m_Texture["OutputDepth"]);
+	glBindTexture(GL_TEXTURE_2D, m_Texture["OutputDepth"]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	// 깊이 버퍼를 위한 포맷
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, m_WindowSizeX, m_WindowSizeY, 0, GL_DEPTH_COMPONENT24, GL_FLOAT, 0);
 
-	glGenFramebuffers(1, &m_FBO["FrameBufferP1"]);
-	glBindFramebuffer(GL_FRAMEBUFFER, m_FBO["FrameBufferP1"]);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_Texture["TexP1"], 0);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_Texture["TexP1Depth"], 0);
+	glGenFramebuffers(1, &m_FBO["GBUFFER"]);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_FBO["GBUFFER"]);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_Texture["FragColor"], 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, m_Texture["BrightColor"], 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, m_Texture["WorldPosition"], 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, m_Texture["WorldNormal"], 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, m_Texture["ViewDir"], 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, m_Texture["SpecData"], 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_Texture["OutputDepth"], 0);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -220,7 +264,7 @@ void Renderer::CreateShaderStorageBufferObjectsForParticles()
 		particlelightatten[i].mAttenRange.x = 1.0;
 		particlelightatten[i].mAttenRange.y = 0.1;
 		particlelightatten[i].mAttenRange.z = 0.01;
-		particlelightatten[i].mAttenRange.w = RandomRangeFloat(1, 5);
+		particlelightatten[i].mAttenRange.w = RandomRangeFloat(0.5, 2);
 	}
 	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
@@ -286,8 +330,8 @@ void Renderer::CreateParticleLightTextureData()
 
 	glGenTextures(1, &mWorldParticleTexture["WorldParticleLightColor"]);
 	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleLightColor"]);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP);
@@ -297,8 +341,8 @@ void Renderer::CreateParticleLightTextureData()
 
 	glGenTextures(1, &mWorldParticleTexture["WorldParticleLightDirection"]);
 	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleLightDirection"]);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP);
@@ -642,6 +686,17 @@ void Renderer::DrawPlaneMesh()
 
 void Renderer::DrawSolidMesh(std::string _ObjectName)
 {
+
+	if (mbActiveDeferdRendering)
+	{
+		SetFrameBuffer();
+		glBindFramebuffer(GL_FRAMEBUFFER, m_FBO["GBUFFER"]);
+		GLenum drawBuffers[6] = { GL_COLOR_ATTACHMENT0 , GL_COLOR_ATTACHMENT1 ,GL_COLOR_ATTACHMENT2,
+		GL_COLOR_ATTACHMENT3,GL_COLOR_ATTACHMENT4,GL_COLOR_ATTACHMENT5 };
+		glDrawBuffers(6, drawBuffers);
+	}
+
+
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glDepthFunc(GL_LEQUAL);
@@ -666,6 +721,12 @@ void Renderer::DrawSolidMesh(std::string _ObjectName)
 
 	GLuint ActiveInterpolate = glGetUniformLocation(shader, "u_bInterPolate");
 	GLuint ActiveTricubicInterpolate = glGetUniformLocation(shader, "u_bTricubicInterPolate");
+	GLuint OnlyApplyLightIntensity = glGetUniformLocation(shader,"u_OnlyApplyLightIntensity");
+	GLuint ApplyParticleSpecular = glGetUniformLocation(shader , "u_ApplyParticleSpecular");
+	GLuint CheckLightDirection = glGetUniformLocation(shader , "u_CheckLightDirection");
+	GLuint ActiveOverSampling = glGetUniformLocation(shader, "u_ActiveOverSampling");
+	GLuint Tension = glGetUniformLocation(shader, "u_Tension");
+	GLuint Defered = glGetUniformLocation(shader, "u_ActiveDeferredRendering");
 
 	glUniformMatrix4fv(projView, 1, GL_FALSE, &mCamera.GetProjViewMatrix()[0][0]);
 	glUniformMatrix4fv(model, 1, GL_FALSE, &mGameObjects[_ObjectName].GetTransform()->GetModelMatrix()[0][0]);
@@ -691,6 +752,12 @@ void Renderer::DrawSolidMesh(std::string _ObjectName)
 
 	glUniform1i(ActiveInterpolate, mbActiveTriInterPolate);
 	glUniform1i(ActiveTricubicInterpolate, mbUsingTricubicInterpolate);
+	glUniform1i(OnlyApplyLightIntensity, mbOnlyApplyLightIntensity);
+	glUniform1i(ApplyParticleSpecular, mbApplyParticleSpecular);
+	glUniform1i(CheckLightDirection, mbCheckLightDirection);
+	glUniform1i(ActiveOverSampling, mbActiveOverSampling);
+	glUniform1f(Tension, mTension);
+	glUniform1i(Defered, mbActiveDeferdRendering);
 
 	////////////////////////////////////////////////////////////////
 	GLuint gTextureDirection = glGetUniformLocation(shader, "u_WorldParticleLightDirection");
@@ -739,8 +806,8 @@ void Renderer::SimulateParticle()
 
 	if (!mbSimulatingParticle) return;
 	
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_SSBO["ParticlePosition"]);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, m_SSBO["ParticleVelocity"]);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_SSBO["ParticlePosition"]);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_SSBO["ParticleVelocity"]);
 	
 
 	GLuint shader = m_Shaders["ParticleSimulate"];
@@ -792,9 +859,9 @@ void Renderer::ClearWorldParticleTextures()
 
 void Renderer::UpdateWorldParticleTextures()
 {
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_SSBO["ParticlePosition"]);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, m_SSBO["ParticleLightColor"]);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, m_SSBO["ParticleRangeAtten"]);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_SSBO["ParticlePosition"]);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_SSBO["ParticleLightColor"]);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, m_SSBO["ParticleRangeAtten"]);
 
 	GLuint shader = m_Shaders["ParticleWorldIntensityUpdate"];
 	
@@ -834,9 +901,8 @@ void Renderer::DrawParticle()
 	GLuint shader = m_Shaders["BasicParticle"];
 	glUseProgram(shader);
 
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_SSBO["ParticlePosition"]);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, m_SSBO["ParticleVelocity"]);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, m_SSBO["ParticleLightColor"]);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_SSBO["ParticlePosition"]);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_SSBO["ParticleLightColor"]);
 
 	GLuint projView = glGetUniformLocation(shader, "u_ProjView");
 	glUniformMatrix4fv(projView, 1, GL_FALSE, &mCamera.GetProjViewMatrix()[0][0]);
@@ -850,6 +916,99 @@ void Renderer::DrawParticle()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	glDisable(GL_DEPTH_TEST);
+}
+
+void Renderer::LightingPass()
+{
+	if (!mbActiveDeferdRendering) return;
+
+	GLuint shader{ m_Shaders["DeferedLightPass"] };
+
+	glUseProgram(shader);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	GLuint gFragColor = glGetUniformLocation(shader, "gFragColor");
+	GLuint gBrightColor = glGetUniformLocation(shader, "gBrightColor");
+	GLuint gWorldPosition = glGetUniformLocation(shader, "gWorldPosition");
+	GLuint gWorldNormal = glGetUniformLocation(shader, "gWorldNormal");
+	GLuint gViewDir = glGetUniformLocation(shader, "gViewDir");
+	GLuint gSpecData = glGetUniformLocation(shader, "gSpecData");
+	
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_Texture["FragColor"]);
+	glUniform1i(gFragColor, 0);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, m_Texture["BrightColor"]);
+	glUniform1i(gBrightColor, 1);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, m_Texture["WorldPosition"]);
+	glUniform1i(gWorldPosition, 2);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, m_Texture["WorldNormal"]);
+	glUniform1i(gWorldNormal, 3);
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, m_Texture["ViewDir"]);
+	glUniform1i(gViewDir, 4);
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, m_Texture["SpecData"]);
+	glUniform1i(gSpecData, 5);
+
+	GLuint ActiveInterpolate = glGetUniformLocation(shader, "u_bInterPolate");
+	GLuint ActiveTricubicInterpolate = glGetUniformLocation(shader, "u_bTricubicInterPolate");
+	GLuint OnlyApplyLightIntensity = glGetUniformLocation(shader, "u_OnlyApplyLightIntensity");
+	GLuint ApplyParticleSpecular = glGetUniformLocation(shader, "u_ApplyParticleSpecular");
+	GLuint CheckLightDirection = glGetUniformLocation(shader, "u_CheckLightDirection");
+	GLuint ActiveOverSampling = glGetUniformLocation(shader, "u_ActiveOverSampling");
+	GLuint Tension = glGetUniformLocation(shader, "u_Tension");
+
+	GLuint posId = glGetAttribLocation(shader, "a_Position");
+	GLuint texPosId = glGetAttribLocation(shader, "a_TexPos");
+
+	glUniform1i(ActiveInterpolate, mbActiveTriInterPolate);
+	glUniform1i(ActiveTricubicInterpolate, mbUsingTricubicInterpolate);
+	glUniform1i(OnlyApplyLightIntensity, mbOnlyApplyLightIntensity);
+	glUniform1i(ApplyParticleSpecular, mbApplyParticleSpecular);
+	glUniform1i(CheckLightDirection, mbCheckLightDirection);
+	glUniform1i(ActiveOverSampling, mbActiveOverSampling);
+	glUniform1f(Tension, mTension);
+
+	GLuint gTextureDirection = glGetUniformLocation(shader, "u_WorldParticleLightDirection");
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleLightDirection"]);
+	glUniform1i(gTextureDirection, 6);
+
+	GLuint gTextureLightColor = glGetUniformLocation(shader, "u_WorldParticleLightColor");
+	glActiveTexture(GL_TEXTURE7);
+	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleLightColor"]);
+	glUniform1i(gTextureLightColor, 7);
+
+
+	GLuint mainDirLight_Color = glGetUniformLocation(shader, "dirLight.mLightColor");
+	GLuint mainDirLight_Dir = glGetUniformLocation(shader, "dirLight.mDirection");
+
+	glUniform4f(mainDirLight_Color, mMainDirectionalLight.mLightColor.x,
+		mMainDirectionalLight.mLightColor.y,
+		mMainDirectionalLight.mLightColor.z,
+		mMainDirectionalLight.mLightColor.w);
+	glUniform3f(mainDirLight_Dir, mMainDirectionalLight.mDirection.x,
+		mMainDirectionalLight.mDirection.y,
+		mMainDirectionalLight.mDirection.z);
+
+	glEnableVertexAttribArray(posId);
+	glEnableVertexAttribArray(texPosId);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBO["FullScreenBasicTexture"]);
+
+	glVertexAttribPointer(posId, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, 0);
+	glVertexAttribPointer(texPosId, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (GLvoid*)(sizeof(float) * 3));
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	glDisableVertexAttribArray(posId);
+	glDisableVertexAttribArray(texPosId);
+
+
 }
 
 
@@ -891,9 +1050,10 @@ void Renderer::DrawTexture(GLuint textureID, GLuint x, GLuint y, GLuint width, G
 
 void Renderer::SetFrameBuffer()
 {
-	GLenum drawBuffers[2] = { GL_COLOR_ATTACHMENT0 , GL_COLOR_ATTACHMENT1 };
-	glDrawBuffers(2, drawBuffers);
-
+	GLenum drawBuffers[6] = { GL_COLOR_ATTACHMENT0 , GL_COLOR_ATTACHMENT1 ,GL_COLOR_ATTACHMENT2,
+	GL_COLOR_ATTACHMENT3,GL_COLOR_ATTACHMENT4,GL_COLOR_ATTACHMENT5};
+	glDrawBuffers(6, drawBuffers);
+	
 
 	//// 디버깅용
 	//glClearColor(1, 1, 1, 1);
@@ -923,12 +1083,19 @@ void Renderer::Update()
 
 	mWindowStatString.clear();
 
+	mWindowStatString += "Num of Particle : " + std::to_string(mNumRenderingParticle) + " ";
+
+	if (mbActiveDeferdRendering) mWindowStatString += "Defered ON | ";
+
 	if (mbActiveTriInterPolate)
 	{
 		mWindowStatString += "InterPolate ON | ";
 		if(mbUsingTricubicInterpolate) mWindowStatString += "Tricubic ON | ";
+		if (mbOnlyApplyLightIntensity) mWindowStatString += "Disable Colored Light | ";
 	}
-		
+	if (mbActiveOverSampling) mWindowStatString += "ActiveOverSampling ON | ";
+	if (mbApplyParticleSpecular) mWindowStatString += "Particle Specular ON | ";
+	mWindowStatString += "Tension : " + std::to_string(mTension) + " | ";
 
 }
 
@@ -943,11 +1110,14 @@ void Renderer::KeyInput(unsigned char key, int x, int y)
 	GetMainCamera().KeyInput(key, x, y);
 
 	switch (key) {
+	case 'z' : case 'Z':
+		mbActiveDeferdRendering = 1 - mbActiveDeferdRendering;
+		break;
 	case 'p': case 'P':
 		mNumRenderingParticle = std::min(static_cast<int>(NUM_PARTICLES), mNumRenderingParticle*2);
 		break;
 	case 'o': case 'O':
-		mNumRenderingParticle = std::max(1, static_cast<int>(mNumRenderingParticle * 0.5));
+		mNumRenderingParticle = std::max(static_cast<int>(WORK_GROUP_SIZE), static_cast<int>(mNumRenderingParticle * 0.5));
 
 		break;
 
@@ -962,8 +1132,26 @@ void Renderer::KeyInput(unsigned char key, int x, int y)
 	case 'y': case 'Y':
 		mbUsingTricubicInterpolate = 1 - mbUsingTricubicInterpolate;
 		break;
-	}
 
+	case 'i': case 'I':
+		mbOnlyApplyLightIntensity = 1 - mbOnlyApplyLightIntensity;
+		break;
+	case 'u': case 'U':
+		mbApplyParticleSpecular = 1 - mbApplyParticleSpecular;
+		break;
+	case 'k': case 'K':
+		mbCheckLightDirection = 1 - mbCheckLightDirection;
+		break;
+	case 'm' : case 'M':
+		mbActiveOverSampling = 1 - mbActiveOverSampling;
+		break;
+	case 'h' : case 'H':
+		mTension = std::max(0.0f, mTension - 0.1f);
+			break;
+	case 'j': case 'J':
+		mTension = std::min(mTension + 0.1f, 1.0f);
+			break;
+	}
 
 
 }

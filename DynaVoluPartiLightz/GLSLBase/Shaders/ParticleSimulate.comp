@@ -2,11 +2,11 @@
 #extension GL_ARB_compute_shader : enable
 #extension GL_ARB_shader_storage_buffer_object : enable
 
-layout( std140, binding= 4 ) buffer ParticlePosition
+layout( std140, binding= 0 ) buffer ParticlePosition
 {
 	vec4 Positions[];
 };
-layout( std140, binding= 5 ) buffer ParticleVelocity
+layout( std140, binding= 1 ) buffer ParticleVelocity
 {
 	vec4 Velocities[];
 };

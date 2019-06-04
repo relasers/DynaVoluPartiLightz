@@ -2,17 +2,17 @@
 #extension GL_ARB_compute_shader : enable
 #extension GL_ARB_shader_storage_buffer_object : enable
 
-layout( std140, binding= 4 ) buffer ParticlePosition
+layout( std140, binding= 0 ) buffer ParticlePosition
 {
 	vec4 Positions[];
 };
 
-layout( std140, binding= 6 ) buffer ParticleLightColor
+layout( std140, binding= 1 ) buffer ParticleLightColor
 {
 	vec4 LightColor[];
 };
 
-layout( std140, binding= 7 ) buffer ParticleRangeAtten
+layout( std140, binding= 2 ) buffer ParticleRangeAtten
 {
 	vec4 AttenRange[];
 };
@@ -21,21 +21,24 @@ layout( std140, binding= 7 ) buffer ParticleRangeAtten
 layout (rgba32f, binding = 0) uniform image3D LightDirTex;
 layout (rgba32f, binding = 1) uniform image3D LightColorTex;
 
+int gaussian_filter[3][3][3];
+
 layout( local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
 void main()
 {
 	
 	uint gid = gl_GlobalInvocationID.x;
 	ivec3 particlePosition =ivec3(Positions[ gid ].x, Positions[ gid ].y,Positions[ gid ].z );
+	vec3 fparticlePosition = Positions[ gid ].xyz;
 
-	highp int dist = int(AttenRange[gid].w);
+	highp int dist = int(AttenRange[gid].w+1);
 
 	
-	for(int i =-dist;i<dist;++i)
+	for(int i =-dist;i<= dist;++i)
 	{
-		for(int j =-dist;j<dist;++j)
+		for(int j =-dist;j<= dist;++j)
 		{
-			for(int k =-dist;k<dist;++k)
+			for(int k =-dist;k<= dist;++k)
 			{
 				ivec3 pixel_coords = particlePosition;
 
@@ -45,7 +48,7 @@ void main()
 				pixel_coords.z = clamp(pixel_coords.z,0,128);
 				
 				// distance between lightcenter from picked texel
-				float distvalue = distance(particlePosition, pixel_coords );
+				float distvalue = distance(fparticlePosition, pixel_coords );
 				if (distvalue > dist) continue;
 
 				float attenuation = 1.0 / 
@@ -62,21 +65,28 @@ void main()
 				);
 
 
-				vec4 final_dir;
-				vec3 light_dir = normalize( particlePosition - pixel_coords); // 우선 단위벡터로 넘겨보자.
-				final_dir.xyz = light_dir.xyz;
+				
 
-				// 파티클 라이트 컬러를 사용안하고 intensity 값만 반영할 경우 사용하기 위해
-				final_dir.a = attenuation;
-				final_dir.a = max(0,final_dir.a);
-				vec4 stored_dir_pixel = imageLoad(LightDirTex, pixel_coords); 
-				vec4 stored_color_pixel = imageLoad(LightColorTex,pixel_coords);
-				//if(final_color.a < stored_pixel.a ) light_dir.xyz = stored_pixel.xyz;
 				vec4 final_color = attenuation * vec4(LightColor[gid].xyzw);
 				final_color = max(vec4(0),final_color);
+
+				vec4 final_dir;
+				// 우선 단위벡터로 넘겨보자
+				vec3 light_dir = normalize( fparticlePosition - vec3(pixel_coords)); 
+				// intensity 에 따른 가중치를 반영해보자.
+				final_dir.xyz = light_dir.xyz * final_color.a;
+
+				vec4 stored_dir_pixel = imageLoad(LightDirTex, pixel_coords); 
+				vec4 stored_color_pixel = imageLoad(LightColorTex,pixel_coords);
+				
+				//if(final_color.a < stored_color_pixel.a ) final_dir.xyz = stored_dir_pixel.xyz;
+				
+				
 				// interpolation 해서 받아오고 반영해주어야함
 
-				imageStore (LightDirTex, pixel_coords, stored_dir_pixel+final_dir );
+				// 3x3x3 커널 반영
+
+				imageStore (LightDirTex, pixel_coords, stored_dir_pixel + final_dir*0.1 );
 				imageStore (LightColorTex, pixel_coords, stored_color_pixel + final_color );
 				//imageStore (LightColorTex, pixel_coords, vec4(1) );
 			}

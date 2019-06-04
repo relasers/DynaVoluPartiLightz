@@ -47,6 +47,13 @@ uniform Material u_material;
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 uniform bool u_bInterPolate;
 uniform bool u_bTricubicInterPolate;
+uniform bool u_OnlyApplyLightIntensity;
+uniform bool u_ApplyParticleSpecular;
+uniform bool u_CheckLightDirection;
+uniform bool u_ActiveOverSampling;
+uniform bool u_ActiveDeferredRendering;
+uniform float u_Tension;
+
 
 in vec4 v_WorldPosition;
 
@@ -98,17 +105,42 @@ vec3 CalcPointLight(PointLight light,Material mate, vec3 normal, vec3 fragPos, v
 
 
 
-layout(location=0) out vec4 FragColor;
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 BrightColor;
+layout (location = 2) out vec4 WorldPosition;
+layout (location = 3) out vec4 WorldNormal;
+layout (location = 4) out vec4 ViewDir;
+layout (location = 5) out vec4 SpecData; // r - spec power, g - spec Factor
+
 in vec4 v_Color;
 in vec3 v_Normal;
 in vec3 v_viewDir;
+
+vec4 OverSampling3DTexture(sampler3D _tex, vec3 _coord, float _texel_size)
+{
+	vec4 result;
+
+	for(int i = -1 ; i<=1 ;++i )
+	{
+		for(int j =-1 ; j<=1;++j)
+		{
+			for(int k =-1 ; k<=1;++k)
+			{
+				result += texture (_tex,_coord + vec3(i,j,k)*_texel_size);
+			}
+		}
+	}
+	result *= 0.037; // 1/27
+
+	return result;
+}
 
 // t, ( i-1, i , i+1, i+2 )
 float CubicInterPolation(float t, vec4 value)
 {
 
 	//http://graphics.cs.cmu.edu/nsp/course/15-462/Fall04/assts/catmullRom.pdf
-	float ten =  0.5; // tension
+	float ten =  u_Tension; // tension
 	//mat4 catMullMatrix = mat4(
 	//0,			1,				0,				0,
 	//-ten,			0,				ten,			0,
@@ -127,13 +159,9 @@ float CubicInterPolation(float t, vec4 value)
 	return result;
 }
 
-vec4 TrilinearInterpolation(sampler3D _tex, vec3 _coord , float _unit_per_dim)
+vec4 TrilinearInterpolation(sampler3D _tex, vec3 _texCoord ,vec3 _leftBottomCoord, float _texelSize, vec3 _t)
 {
 	// calculate t value for interpolation
-	vec3 delta;
-	delta = ( v_WorldPosition.xyz - floor(v_WorldPosition.xyz) ) 
-	/ ( floor(v_WorldPosition.xyz + vec3(1,1,1) ) 
-	- floor(v_WorldPosition.xyz)); // ( x - x0 ) / ( x1 - x0 )
 
 	vec4 VFI[2][2][2];
 
@@ -143,9 +171,10 @@ vec4 TrilinearInterpolation(sampler3D _tex, vec3 _coord , float _unit_per_dim)
 		{
 			for(int k =0;k<2;++k)
 			{
-				VFI[i][j][k] = texture (_tex,_coord 
-				+ vec3(i*_unit_per_dim,j*_unit_per_dim,k*_unit_per_dim)
-				);
+				vec3 new_coord = _leftBottomCoord+vec3((i)*_texelSize,(j)*_texelSize,(k)*_texelSize);
+				VFI[i][j][k] = (u_ActiveOverSampling) ?
+				OverSampling3DTexture(_tex,new_coord,_texelSize) : 
+				texture (_tex,new_coord);
 			}
 		}
 	}
@@ -155,29 +184,22 @@ vec4 TrilinearInterpolation(sampler3D _tex, vec3 _coord , float _unit_per_dim)
 	vec4 c00, c01, c10, c11;
 	
 
-	c00 = mix(VFI[0][0][0], VFI[1][0][0],delta.x );
-	c01 = mix(VFI[0][0][1], VFI[1][0][1],delta.x );
-	c10 = mix(VFI[0][1][0], VFI[1][1][0],delta.x );
-	c11 = mix(VFI[0][1][1], VFI[1][1][1],delta.x );
+	c00 = mix(VFI[0][0][0], VFI[1][0][0],_t.x );
+	c01 = mix(VFI[0][0][1], VFI[1][0][1],_t.x );
+	c10 = mix(VFI[0][1][0], VFI[1][1][0],_t.x );
+	c11 = mix(VFI[0][1][1], VFI[1][1][1],_t.x );
 	
 	vec4 c0 , c1;
-	c0 = mix(c00,c10,delta.y);
-	c1 = mix(c01,c11,delta.y);
+	c0 = mix(c00,c10,_t.y);
+	c1 = mix(c01,c11,_t.y);
 
-	return mix(c0,c1, delta.z);
+	return mix(c0,c1, _t.z);
 }
 
 // TriCubic Interpolation using cat-mullrom spline interpolation
 //http://www.cds.caltech.edu/~marsden/bib/2005/08-LeMa2005/LeMa2005.pdf
-vec4 TriCubicInterpolation(sampler3D _tex, vec3 _coord , float _unit_per_dim)
+vec4 TriCubicInterpolation(sampler3D _tex, vec3 _texCoord ,vec3 _leftBottomCoord, float _texelSize, vec3 _t)
 {
-	// calculate t value for interpolation
-	vec3 delta;
-	delta = ( v_WorldPosition.xyz - floor(v_WorldPosition.xyz) ) 
-	/ ( floor(v_WorldPosition.xyz + vec3(1,1,1) ) 
-	- floor(v_WorldPosition.xyz)); // ( x - x0 ) / ( x1 - x0 )
-
-	//delta = vec3(0,0,0);
 
 	vec4 s[4][4][4];
 	vec4 t[4][4];
@@ -188,10 +210,10 @@ vec4 TriCubicInterpolation(sampler3D _tex, vec3 _coord , float _unit_per_dim)
 		{
 			for(int k =0;k<4;++k)
 			{
-			s[i][j][k] = vec4(1);
-				s[i][j][k] = texture (_tex,_coord 
-				+ vec3((i-1)*_unit_per_dim,(j-1)*_unit_per_dim,(k-1)*_unit_per_dim)
-				);
+				vec3 new_coord = _leftBottomCoord +  vec3((i-1)*_texelSize,(j-1)*_texelSize,(k-1)*_texelSize);
+				s[i][j][k] = (u_ActiveOverSampling) ? 
+				OverSampling3DTexture(_tex,new_coord,_texelSize): 
+				texture (_tex,new_coord);
 			}
 		}
 	}
@@ -200,31 +222,116 @@ vec4 TriCubicInterpolation(sampler3D _tex, vec3 _coord , float _unit_per_dim)
 	{
 		for(int j =0;j<4;++j)
 		{
-			t[i][j].x = CubicInterPolation(delta.z,
+			t[i][j].x = CubicInterPolation(_t.z,
 			vec4(s[i][j][0].x, s[i][j][1].x, s[i][j][2].x, s[i][j][3].x) );
-			t[i][j].y = CubicInterPolation(delta.z,
+			t[i][j].y = CubicInterPolation(_t.z,
 			vec4(s[i][j][0].y, s[i][j][1].y, s[i][j][2].y, s[i][j][3].y) );
-			t[i][j].z = CubicInterPolation(delta.z,
+			t[i][j].z = CubicInterPolation(_t.z,
 			vec4(s[i][j][0].z, s[i][j][1].z, s[i][j][2].z, s[i][j][3].z) );
-			t[i][j].w = CubicInterPolation(delta.z,
+			t[i][j].w = CubicInterPolation(_t.z,
 			vec4(s[i][j][0].w, s[i][j][1].w, s[i][j][2].w, s[i][j][3].w) );
 		}
 	}
 
 	for(int i =0;i<4;++i)
 	{
-		u[i].x = CubicInterPolation(delta.y, vec4(t[i][0].x,t[i][1].x,t[i][2].x,t[i][3].x) );
-		u[i].y = CubicInterPolation(delta.y, vec4(t[i][0].y,t[i][1].y,t[i][2].y,t[i][3].y) );
-		u[i].z = CubicInterPolation(delta.y, vec4(t[i][0].z,t[i][1].z,t[i][2].z,t[i][3].z) );
-		u[i].w = CubicInterPolation(delta.y, vec4(t[i][0].w,t[i][1].w,t[i][2].w,t[i][3].w) );
+		u[i].x = CubicInterPolation(_t.y, vec4(t[i][0].x,t[i][1].x,t[i][2].x,t[i][3].x) );
+		u[i].y = CubicInterPolation(_t.y, vec4(t[i][0].y,t[i][1].y,t[i][2].y,t[i][3].y) );
+		u[i].z = CubicInterPolation(_t.y, vec4(t[i][0].z,t[i][1].z,t[i][2].z,t[i][3].z) );
+		u[i].w = CubicInterPolation(_t.y, vec4(t[i][0].w,t[i][1].w,t[i][2].w,t[i][3].w) );
 	}
 	vec4 result = vec4(1);
 
-	result.x = CubicInterPolation(delta.x, vec4(u[0].x,u[1].x,u[2].x,u[3].x));
-	result.y = CubicInterPolation(delta.x, vec4(u[0].y,u[1].y,u[2].y,u[3].y));
-	result.z = CubicInterPolation(delta.x, vec4(u[0].z,u[1].z,u[2].z,u[3].z));
-	result.w = CubicInterPolation(delta.x, vec4(u[0].w,u[1].w,u[2].w,u[3].w));
+	result.x = CubicInterPolation(_t.x, vec4(u[0].x,u[1].x,u[2].x,u[3].x));
+	result.y = CubicInterPolation(_t.x, vec4(u[0].y,u[1].y,u[2].y,u[3].y));
+	result.z = CubicInterPolation(_t.x, vec4(u[0].z,u[1].z,u[2].z,u[3].z));
+	result.w = CubicInterPolation(_t.x, vec4(u[0].w,u[1].w,u[2].w,u[3].w));
 	return result;
+}
+
+void ForwardRendering()
+{
+	FragColor.xyz += CalcDirLight(dirLight,u_material,v_Normal,v_viewDir).xyz;
+
+	vec3 newCoord = v_WorldPosition.xyz;
+	vec3 leftBottomCoord = floor(newCoord);
+	float sizeOfTex = 128.0f;
+	float texelSize = 1.0f/128.0f;
+	vec3 t = newCoord - leftBottomCoord;
+
+	newCoord *= texelSize;
+	leftBottomCoord *= texelSize;
+
+	vec4 interpolatedDirection;
+	vec4 interpolatedColor;
+	
+
+
+	vec4 ParticleLightColor;
+	vec3 ParticleLightVec;
+	// Calculate Particle Light Diffuse
+	if(u_bInterPolate)
+	{
+		
+		// Process Interpolation
+		if(u_bTricubicInterPolate)
+		{
+			interpolatedDirection = TriCubicInterpolation(u_WorldParticleLightDirection,newCoord,leftBottomCoord,texelSize,t);
+			interpolatedColor = TriCubicInterpolation(u_WorldParticleLightColor,newCoord,leftBottomCoord,texelSize,t);
+		}
+		else
+		{
+			interpolatedDirection = TrilinearInterpolation(u_WorldParticleLightDirection,newCoord,leftBottomCoord,texelSize,t);
+			interpolatedColor = TrilinearInterpolation(u_WorldParticleLightColor,newCoord,leftBottomCoord,texelSize,t);
+		}
+
+		
+		ParticleLightVec = interpolatedDirection.xyz;
+		// we can't normalize zero vector
+		// 노멀라이즈 하면 끔찍한 계단현상을 보게될 것.
+		if (length(ParticleLightVec.xyz) >= 0.001)
+			ParticleLightVec = normalize(ParticleLightVec);
+
+		ParticleLightColor = interpolatedColor.xyzw;
+	}
+	else
+	{
+		ParticleLightVec = (u_ActiveOverSampling) ? 
+		OverSampling3DTexture(u_WorldParticleLightDirection,newCoord,texelSize).xyz
+		: (texture (u_WorldParticleLightDirection,newCoord).xyz);
+		if (length(ParticleLightVec.xyz) >= 0.001)
+			ParticleLightVec = normalize(ParticleLightVec);
+
+		ParticleLightColor = (u_ActiveOverSampling) ? 
+		OverSampling3DTexture(u_WorldParticleLightColor,newCoord,texelSize)
+		: texture (u_WorldParticleLightColor,newCoord).xyzw;
+	}
+	
+	FragColor.xyz += (u_OnlyApplyLightIntensity) ? 
+	vec3(ParticleLightColor.a) : vec3(ParticleLightColor.rgb) * ParticleLightColor.a;
+	// calc Half vector
+
+	if(u_ApplyParticleSpecular)
+	{
+		vec3 Hvector = normalize(ParticleLightVec.xyz + v_viewDir.xyz).xyz;
+		// N dot H
+		float NdotH = max(dot(Hvector,v_Normal ) ,0);
+		float SpecIntensity = pow( NdotH, u_material.mSpecularPower ) * ParticleLightColor.a;
+		FragColor.xyz += SpecIntensity * vec3(1,1,1);
+	}
+
+	if(u_CheckLightDirection)
+		FragColor.xyz = (ParticleLightVec+1)*0.5f;
+}
+
+void DeferedRendering()
+{
+	FragColor.xyz = u_material.mDiffuseColor.xyz;
+	WorldNormal.xyz = v_Normal;
+	WorldPosition.xyz = v_WorldPosition.xyz;
+	ViewDir.xyz = v_viewDir.xyz;
+	SpecData.x = u_material.mSpecularFactor;
+	SpecData.y = u_material.mSpecularPower;
 }
 
 void main()
@@ -233,58 +340,22 @@ void main()
 	//FragColor = vec4(0.2f,0.2f,0.2f,1.0f);
 
 	FragColor = vec4(0.05f,0.05f,0.05f,1.0f);
-	FragColor.xyz += CalcDirLight(dirLight,u_material,v_Normal,v_viewDir).xyz;
-
-	vec3 new_coord = v_WorldPosition.xyz;
-
-	vec3 newCoord0 = floor(v_WorldPosition.xyz);
-	vec3 newCoord1 = floor(v_WorldPosition.xyz+vec3(1,1,1));
-
-	float dim_of_texture = 128.0f;
-	float unit_per_dim = 1.0f/128.0f;
-
-	new_coord /= dim_of_texture;
-	newCoord0 /= dim_of_texture;
-	newCoord1 /= dim_of_texture;
 
 
-	vec4 interpolatedDirection;
-	vec4 interpolatedColor;
-	if(u_bTricubicInterPolate)
+	if(u_ActiveDeferredRendering)
 	{
-		interpolatedDirection = TriCubicInterpolation(u_WorldParticleLightDirection,newCoord0,unit_per_dim);
-		interpolatedColor = TriCubicInterpolation(u_WorldParticleLightColor,newCoord0,unit_per_dim);
+		DeferedRendering();
 	}
 	else
 	{
-		interpolatedDirection = TrilinearInterpolation(u_WorldParticleLightDirection,newCoord0,unit_per_dim);
-		interpolatedColor = TrilinearInterpolation(u_WorldParticleLightColor,newCoord0,unit_per_dim);
+		ForwardRendering();
 	}
 
-
-	vec4 ParticleLightColor;
-	vec3 ParticleLightVec;
-	// Calculate Particle Light Diffuse
-	if(u_bInterPolate)
-	{
-		ParticleLightVec = normalize(interpolatedDirection.xyz);
-		ParticleLightColor = interpolatedColor.xyzw;
-	}
-	else
-	{
-		ParticleLightVec = normalize(texture (u_WorldParticleLightDirection,new_coord).xyz);
-		ParticleLightColor = texture (u_WorldParticleLightColor,new_coord).xyzw;
-	}
 	
-	FragColor.xyz += vec3(ParticleLightColor.rgb) * ParticleLightColor.a;
-	// calc Half vector
-	vec3 HalfVec = normalize(ParticleLightVec.xyz + v_viewDir);
-	// N dot H
-	float NdotH = dot(HalfVec,v_Normal);
-	float SpecIntensity = pow( max( NdotH, 0 ), u_material.mSpecularPower );
-
-	//FragColor.xyz += SpecIntensity * vec3(1,1,1);
-
-	//FragColor.x = ;
-	//FragColor = vec4(1,1,1,1);
+	
+	float brightness = dot(FragColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+	if(brightness > 1.0)
+        BrightColor = vec4(FragColor.rgb, 1.0);
+    else
+        BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
 }

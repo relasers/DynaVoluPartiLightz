@@ -12,6 +12,7 @@ void main()
 	highp float new_dim = float(dims.z);
 	highp float temp = float(pixel_coords.z);
 
-    imageStore (LightDirTex, pixel_coords, vec4(0,0, 0 ,0));
-	imageStore (LightColorTex, pixel_coords, vec4(0,0, 0 ,0));
+	// to avoid normalize zero vector
+    imageStore (LightDirTex, pixel_coords, vec4(0.0,0.0,0.0,0.0));
+	imageStore (LightColorTex, pixel_coords, vec4(0,0,0,0));
 }

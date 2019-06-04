@@ -37,10 +37,16 @@ public:
 	void UpdateWorldParticleTextures();
 	void DrawParticle();
 
+	void LightingPass();
+
 	void DrawTexture(GLuint textureID, GLuint x, GLuint y, GLuint width, GLuint height);
+
+
 
 	void SetFrameBuffer();
 	void ResetFrameBuffer();
+
+
 
 	void Update();
 	void CameraMove(glm::vec3 _velocity, float delta);
@@ -73,7 +79,13 @@ private:
 	
 	bool mbSimulatingParticle = true;
 	bool mbActiveTriInterPolate = true;
-	bool mbUsingTricubicInterpolate = true;
+	bool mbUsingTricubicInterpolate = false;
+	bool mbOnlyApplyLightIntensity = true;
+	bool mbApplyParticleSpecular = true;
+	bool mbCheckLightDirection = false;
+	bool mbActiveOverSampling = false;
+	bool mbActiveDeferdRendering = false;
+	float mTension = 0.5;
 
 	unsigned int m_WindowSizeX = 0;
 	unsigned int m_WindowSizeY = 0;

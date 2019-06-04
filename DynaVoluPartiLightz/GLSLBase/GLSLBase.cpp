@@ -20,8 +20,8 @@ but WITHOUT ANY WARRANTY.
 
 Renderer *g_Renderer = NULL;
 
-int g_WindowSizeX = 500;
-int g_WindowSizeY = 500;
+int g_WindowSizeX = 800;
+int g_WindowSizeY = 600;
 
 
 float curr_theta = 0;
@@ -32,33 +32,44 @@ float AxisPivotTheta = 90;
 
 void RenderScene(void)
 {
+	
 
 	//theta += 0.00016f;
 	//std::cout << theta << std::endl;
 	g_Renderer->Update();
 	
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 	// Renderer Test
 	//g_Renderer->Test();
 	//g_Renderer->DrawPlaneMesh();
-	g_Renderer->SetFrameBuffer();
+	//g_Renderer->SetFrameBuffer();
 	g_Renderer->DrawSolidMesh();
 
 	g_Renderer->SimulateParticle();
 	g_Renderer->DrawParticle();
-
+	g_Renderer->LightingPass();
+	
 	g_Renderer->ResetFrameBuffer();
-
-	glutSetWindowTitle(g_Renderer->GetStatString().data());
+	//tDelta
+	
+	
 	//g_Renderer->DrawTexture(g_Renderer->GetTextureID("OldPage"), 0, 0, 200, 200);
 	glutSwapBuffers();
 }
 
 void Idle(void)
 {
+	auto start = std::chrono::high_resolution_clock::now();
 	RenderScene();
+	auto end = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds> (end - start);
+	std::string title_string = g_Renderer->GetStatString();
+	title_string += std::to_string(duration.count());
+	title_string += "ms";
+	glutSetWindowTitle(title_string.data());
 }
 
 void MouseInput(int button, int state, int x, int y)

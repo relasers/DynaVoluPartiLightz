@@ -1,10 +1,10 @@
 #version 430
-layout( std140, binding= 4 ) buffer ParticlePosition
+layout( std140, binding= 0 ) buffer ParticlePosition
 {
 	vec4 Positions[];
 };
 
-layout( std140, binding= 6 ) buffer ParticleLightColor
+layout( std140, binding= 1 ) buffer ParticleLightColor
 {
 	vec4 LightColor[];
 };
