@@ -1,5 +1,6 @@
 #pragma once
 #include "Light.h"
+#include "Framebuffer.h"
 
 class Camera;
 class Mesh;
@@ -84,6 +85,9 @@ private:
 	GLuint						m_nTFOs;
 	TFO*						m_pTFOs;
 	int							m_CurrTFO;
+
+	Framebuffer					m_FB_ParticleCDTexture;
+	Framebuffer					m_FB_ObjectCDTexture;
 
 	GLuint						m_nFBOs;
 	GLuint*						m_pFBOs;

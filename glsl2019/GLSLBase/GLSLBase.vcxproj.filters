@@ -34,8 +34,8 @@
     <ClCompile Include="Light.cpp">
       <Filter>Light</Filter>
     </ClCompile>
-    <ClCompile Include="Rendertarget.cpp">
-      <Filter>Object\Rendertarget</Filter>
+    <ClCompile Include="Framebuffer.cpp">
+      <Filter>Object\Framebuffer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -72,8 +72,8 @@
     <ClInclude Include="Light.h">
       <Filter>Light</Filter>
     </ClInclude>
-    <ClInclude Include="Rendertarget.h">
-      <Filter>Object\Rendertarget</Filter>
+    <ClInclude Include="Framebuffer.h">
+      <Filter>Object\Framebuffer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -193,7 +193,7 @@
     <Filter Include="Object\GameObject">
       <UniqueIdentifier>{4b038c27-5386-4800-8190-60bb3569b9e2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Object\Rendertarget">
+    <Filter Include="Object\Framebuffer">
       <UniqueIdentifier>{f265f099-b2fe-4ece-8185-ff5e69360755}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
