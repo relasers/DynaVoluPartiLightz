@@ -43,6 +43,12 @@ Transform & Transform::operator=(const Transform & _Transform)
 	return *this;
 }
 
+void Transform::Rotate(glm::vec3 _Axis, float delta)
+{
+	mEulerAngle += _Axis * delta;
+	Update();
+}
+
 void Transform::PrintModelMatrix()
 {
 	std::cout << m_m4Model[0][0] << " " << m_m4Model[0][1] << " " << m_m4Model[0][2] << " " << m_m4Model[0][3] << std::endl;

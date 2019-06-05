@@ -45,6 +45,7 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 	CreateShaderStorageBufferObjectsForParticles();
 
 	CreateParticleLightTextureData();
+	CreateFrameBufferObjects();
 
 	 m_Texture["OldPage"] = CreatePngTexture("./Resource/Texture/OldPage.png");
 	 m_Texture["BackPage"] = CreatePngTexture("./Resource/Texture/BackPage.png");
@@ -64,6 +65,15 @@ void Renderer::CreateGeometryDataMeshes()
 	//mPlaneMesh.BuildGeomData(50,50);
 	//mMeshes["LightingCheckBoard"] = Mesh("LightingCheckBoard", std::string("./Resource/Model/LightingCheckBoard_smooth.obj"));
 	mMeshes["LightingCheckBoard"] = std::make_unique<Mesh>("LightingCheckBoard", std::string("./Resource/Model/LightingCheckBoard_smooth.fbx"));
+	
+	//mMeshes["LightingCheckBoard"] = std::make_unique<Mesh>("LightingCheckBoard", std::string("./Resource/Model/LightingCheckBoard_smooth.fbx"));
+	mMeshes["TinyDragon"] = std::make_unique<Mesh>("TinyDragon", std::string("./Resource/Model/TinyDragonOptimized.fbx"));
+	mMeshes["TinyBunny"] = std::make_unique<Mesh>("TinyBunny", std::string("./Resource/Model/TinyBunny.fbx"));
+	//mMeshes["TinyBuddha"] = std::make_unique<Mesh>("TinyBuddha", std::string("./Resource/Model/TinyBuddha.fbx"));
+
+
+
+
 }
 
 void Renderer::CreateVertexBufferObjects()
@@ -128,64 +138,69 @@ void Renderer::CreateFrameBufferObjects()
 
 	m_Texture["WorldParticleLightIntensity"] = 0;
 
+	glGenFramebuffers(1, &m_FBO["GBUFFER"]);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_FBO["GBUFFER"]);
+	
+
 	glGenTextures(1, &m_Texture["FragColor"]);
 	glBindTexture(GL_TEXTURE_2D, m_Texture["FragColor"]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_WindowSizeX, m_WindowSizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_WindowSizeX, m_WindowSizeY, 0, GL_RGBA, GL_FLOAT, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_Texture["FragColor"], 0);
+	//glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_Texture["FragColor"], 0);
 
 	glGenTextures(1, &m_Texture["BrightColor"]);
 	glBindTexture(GL_TEXTURE_2D, m_Texture["BrightColor"]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_WindowSizeX, m_WindowSizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_WindowSizeX, m_WindowSizeY, 0, GL_RGBA, GL_FLOAT, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_Texture["BrightColor"], 0);
+	//glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, m_Texture["BrightColor"], 0);
 
 	glGenTextures(1, &m_Texture["WorldPosition"]);
 	glBindTexture(GL_TEXTURE_2D, m_Texture["WorldPosition"]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_WindowSizeX, m_WindowSizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, m_WindowSizeX, m_WindowSizeY, 0, GL_RGB, GL_FLOAT, NULL);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, m_Texture["WorldPosition"], 0);
+	//glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, m_Texture["WorldPosition"], 0);
 
 	glGenTextures(1, &m_Texture["WorldNormal"]);
 	glBindTexture(GL_TEXTURE_2D, m_Texture["WorldNormal"]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_WindowSizeX, m_WindowSizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, m_WindowSizeX, m_WindowSizeY, 0, GL_RGB, GL_FLOAT, NULL);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, m_Texture["WorldNormal"], 0);
+	//glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, m_Texture["WorldNormal"], 0);
 
 	glGenTextures(1, &m_Texture["ViewDir"]);
 	glBindTexture(GL_TEXTURE_2D, m_Texture["ViewDir"]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_WindowSizeX, m_WindowSizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, m_WindowSizeX, m_WindowSizeY, 0, GL_RGB, GL_FLOAT, NULL);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, m_Texture["ViewDir"], 0);
+	//glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, m_Texture["ViewDir"], 0);
 
 	glGenTextures(1, &m_Texture["SpecData"]);
 	glBindTexture(GL_TEXTURE_2D, m_Texture["SpecData"]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_WindowSizeX, m_WindowSizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, m_WindowSizeX, m_WindowSizeY, 0, GL_RGBA, GL_FLOAT, NULL);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, GL_TEXTURE_2D, m_Texture["SpecData"], 0);
+	//glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, m_Texture["SpecData"], 0);
 
-	glGenTextures(1, &m_Texture["OutputDepth"]);
-	glBindTexture(GL_TEXTURE_2D, m_Texture["OutputDepth"]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	// 깊이 버퍼를 위한 포맷
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, m_WindowSizeX, m_WindowSizeY, 0, GL_DEPTH_COMPONENT24, GL_FLOAT, 0);
+	GLenum drawBuffers[6] = { GL_COLOR_ATTACHMENT0 , GL_COLOR_ATTACHMENT1 ,GL_COLOR_ATTACHMENT2,
+	GL_COLOR_ATTACHMENT3,GL_COLOR_ATTACHMENT4,GL_COLOR_ATTACHMENT5 };
+	glDrawBuffers(6, drawBuffers);
 
-	glGenFramebuffers(1, &m_FBO["GBUFFER"]);
-	glBindFramebuffer(GL_FRAMEBUFFER, m_FBO["GBUFFER"]);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_Texture["FragColor"], 0);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, m_Texture["BrightColor"], 0);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, m_Texture["WorldPosition"], 0);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, m_Texture["WorldNormal"], 0);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, m_Texture["ViewDir"], 0);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, m_Texture["SpecData"], 0);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_Texture["OutputDepth"], 0);
+	glGenRenderbuffers(1, &m_Texture["OutputDepth"]);
+	glBindRenderbuffer(GL_RENDERBUFFER, m_Texture["OutputDepth"]);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_WindowSizeX, m_WindowSizeY);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_Texture["OutputDepth"]);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "Framebuffer not complete!" << std::endl;
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -210,7 +225,7 @@ void Renderer::CreateShaderStorageBufferObjectsForParticles()
 	for (int i = 0; i < NUM_PARTICLES; i++)
 	{
 		points[i].mPosition.x = RandomRangeFloat(0.0f, 100.0f);
-		points[i].mPosition.y = RandomRangeFloat(0.0f, 20.0f);
+		points[i].mPosition.y = RandomRangeFloat(0.0f, 100.0f);
 		points[i].mPosition.z = RandomRangeFloat(0.0f, 100.0f);
 		points[i].mPosition.w = 1;
 	}
@@ -227,9 +242,9 @@ void Renderer::CreateShaderStorageBufferObjectsForParticles()
 			NUM_PARTICLES * sizeof(ParticleVelocity), bufMask);
 	for (int i = 0; i < NUM_PARTICLES; i++)
 	{
-		vels[i].mVelocity.x = RandomRangeFloat(-1.0f, 1.0f);
-		vels[i].mVelocity.y = RandomRangeFloat(-1.0f, 1.0f);
-		vels[i].mVelocity.z = RandomRangeFloat(-1.0f, 1.0f);
+		vels[i].mVelocity.x = RandomRangeFloat(-2.0f, 2.0f);
+		vels[i].mVelocity.y = RandomRangeFloat(-2.0f, 2.0f);
+		vels[i].mVelocity.z = RandomRangeFloat(-2.0f, 2.0f);
 		vels[i].mVelocity.w = 0;
 	}
 	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
@@ -321,6 +336,41 @@ void Renderer::CreateSceneObjects()
 	mGameObjects["MainGeom"].GetMaterial().SetColor(glm::vec3(0.3, 0.3, 0.3));
 	mGameObjects["MainGeom"].GetMaterial().SetSpecPower(32);
 	mGameObjects["MainGeom"].GetMaterial().SetSpecFactor(1);
+
+
+	for (int i = 0; i < 50; ++i)
+	{
+		GameObject TinyBunny;
+		GameObject TinyDragon;
+
+		std::string bunnyname = "TinyBunny" + std::to_string(i);
+		std::string dragonname = "TinyDragon" + std::to_string(i);
+
+		mGameObjects[bunnyname] = TinyBunny;
+		mGameObjects[bunnyname].SetMesh(mMeshes["TinyBunny"].get());
+		mGameObjects[bunnyname].SetPosition(glm::vec3(
+			RandomRangeFloat(10,90), 
+			10 + RandomRangeFloat(0, 80), 
+			RandomRangeFloat(10, 90)));
+		mGameObjects[bunnyname].SetScale(glm::vec3(1.5, 1.5, 1.5));
+		mGameObjects[bunnyname].SetEulerAngle(glm::vec3(0, RandomRangeFloat(0,360),0));
+		mGameObjects[bunnyname].GetMaterial().SetColor(glm::vec3(RandomRangeFloat(0, 1), RandomRangeFloat(0, 1), RandomRangeFloat(0, 1)));
+		mGameObjects[bunnyname].GetMaterial().SetSpecPower(64);
+		mGameObjects[bunnyname].GetMaterial().SetSpecFactor(1);
+
+		mGameObjects[dragonname] = TinyDragon;
+		mGameObjects[dragonname].SetMesh(mMeshes["TinyDragon"].get());
+		mGameObjects[dragonname].SetPosition(glm::vec3(
+			RandomRangeFloat(10, 90),
+			10 + RandomRangeFloat(0, 80),
+			RandomRangeFloat(10, 90)));
+		mGameObjects[dragonname].SetScale(glm::vec3(1.2, 1.2, 1.2));
+		mGameObjects[dragonname].SetEulerAngle(glm::vec3(0, RandomRangeFloat(0, 360), 0));
+		mGameObjects[dragonname].GetMaterial().SetColor(glm::vec3(RandomRangeFloat(0, 1), RandomRangeFloat(0, 1), RandomRangeFloat(0, 1)));
+		mGameObjects[dragonname].GetMaterial().SetSpecPower(128);
+		mGameObjects[dragonname].GetMaterial().SetSpecFactor(1);
+	}
+	
 }
 
 void Renderer::CreateParticleLightTextureData()
@@ -687,16 +737,6 @@ void Renderer::DrawPlaneMesh()
 void Renderer::DrawSolidMesh(std::string _ObjectName)
 {
 
-	if (mbActiveDeferdRendering)
-	{
-		SetFrameBuffer();
-		glBindFramebuffer(GL_FRAMEBUFFER, m_FBO["GBUFFER"]);
-		GLenum drawBuffers[6] = { GL_COLOR_ATTACHMENT0 , GL_COLOR_ATTACHMENT1 ,GL_COLOR_ATTACHMENT2,
-		GL_COLOR_ATTACHMENT3,GL_COLOR_ATTACHMENT4,GL_COLOR_ATTACHMENT5 };
-		glDrawBuffers(6, drawBuffers);
-	}
-
-
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glDepthFunc(GL_LEQUAL);
@@ -799,6 +839,19 @@ void Renderer::DrawSolidMesh(std::string _ObjectName)
 	glDisableVertexAttribArray(attribVertColor);
 
 	glDisable(GL_DEPTH_TEST);
+
+	//if (mbActiveDeferdRendering)
+	//{
+	//	GLenum error = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	//	if (error != GL_FRAMEBUFFER_COMPLETE)
+	//	{
+	//		std::cout << "bind framebuffer object error!" << std::endl;
+	//	}
+	//
+	//	// 프레임버퍼 원상복귀
+	//	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//}
+
 }
 
 void Renderer::SimulateParticle()
@@ -922,12 +975,14 @@ void Renderer::LightingPass()
 {
 	if (!mbActiveDeferdRendering) return;
 
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	GLuint shader{ m_Shaders["DeferedLightPass"] };
 
 	glUseProgram(shader);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
+	glDisable(GL_DEPTH_TEST);
+
 	GLuint gFragColor = glGetUniformLocation(shader, "gFragColor");
 	GLuint gBrightColor = glGetUniformLocation(shader, "gBrightColor");
 	GLuint gWorldPosition = glGetUniformLocation(shader, "gWorldPosition");
@@ -961,6 +1016,7 @@ void Renderer::LightingPass()
 	GLuint CheckLightDirection = glGetUniformLocation(shader, "u_CheckLightDirection");
 	GLuint ActiveOverSampling = glGetUniformLocation(shader, "u_ActiveOverSampling");
 	GLuint Tension = glGetUniformLocation(shader, "u_Tension");
+	GLuint cameraPos = glGetUniformLocation(shader, "u_CameraPos");
 
 	GLuint posId = glGetAttribLocation(shader, "a_Position");
 	GLuint texPosId = glGetAttribLocation(shader, "a_TexPos");
@@ -972,7 +1028,9 @@ void Renderer::LightingPass()
 	glUniform1i(CheckLightDirection, mbCheckLightDirection);
 	glUniform1i(ActiveOverSampling, mbActiveOverSampling);
 	glUniform1f(Tension, mTension);
-
+	glUniform3f(cameraPos, mCamera.GetCameraPos().x,
+		mCamera.GetCameraPos().y,
+		mCamera.GetCameraPos().z);
 	GLuint gTextureDirection = glGetUniformLocation(shader, "u_WorldParticleLightDirection");
 	glActiveTexture(GL_TEXTURE6);
 	glBindTexture(GL_TEXTURE_3D, mWorldParticleTexture["WorldParticleLightDirection"]);
@@ -1008,7 +1066,14 @@ void Renderer::LightingPass()
 	glDisableVertexAttribArray(posId);
 	glDisableVertexAttribArray(texPosId);
 
-
+	// Deferred Rendering 과 Forward Rendering 과 혼용하기 위함.
+	// 여기서는 Deferred 렌더링 과정에서 업데이트 된 깊이 버퍼를 
+	// Forward Rendering 과정에서도 사용할 수 있도록
+	// 메인 프레임버퍼에 Blit 시키기 위한 과정이다.
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_FBO["GBUFFER"]);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glBlitFramebuffer(0, 0, m_WindowSizeX, m_WindowSizeY, 0, 0, m_WindowSizeX, m_WindowSizeY, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 
@@ -1045,7 +1110,35 @@ void Renderer::DrawTexture(GLuint textureID, GLuint x, GLuint y, GLuint width, G
 
 
 	glViewport(0, 0, m_WindowSizeX, m_WindowSizeY);
+}
 
+void Renderer::ActiveDeferedFrameBuffer()
+{
+	if (mbActiveDeferdRendering)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, m_FBO["GBUFFER"]);
+		GLenum drawBuffers[6] = { GL_COLOR_ATTACHMENT0 , GL_COLOR_ATTACHMENT1 ,GL_COLOR_ATTACHMENT2,
+		GL_COLOR_ATTACHMENT3,GL_COLOR_ATTACHMENT4,GL_COLOR_ATTACHMENT5 };
+		glDrawBuffers(6, drawBuffers);
+
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
+	}
+}
+
+void Renderer::BackToMainBuffer()
+{
+	if (mbActiveDeferdRendering)
+	{
+		GLenum error = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if (error != GL_FRAMEBUFFER_COMPLETE)
+		{
+			std::cout << "bind framebuffer object error!" << std::endl;
+		}
+
+		// 프레임버퍼 원상복귀
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
 }
 
 void Renderer::SetFrameBuffer()
@@ -1078,6 +1171,8 @@ void Renderer::ResetFrameBuffer()
 
 void Renderer::Update()
 {
+
+
 	static float deltaTime = 0;
 	deltaTime += 0.016f;
 
@@ -1097,6 +1192,20 @@ void Renderer::Update()
 	if (mbApplyParticleSpecular) mWindowStatString += "Particle Specular ON | ";
 	mWindowStatString += "Tension : " + std::to_string(mTension) + " | ";
 
+	if (!mbActiveDeferdRendering)
+	{
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	}
+
+	for (int i = 0; i < 50; ++i)
+	{
+		std::string bunnyname = "TinyBunny" + std::to_string(i);
+		std::string dragonname = "TinyDragon" + std::to_string(i);
+
+		mGameObjects[bunnyname].GetTransform()->Rotate(glm::vec3(0,1,0), i*0.0016);
+		mGameObjects[dragonname].GetTransform()->Rotate(glm::vec3(0, 1, 0), i*0.0016);
+	}
 }
 
 void Renderer::CameraMove(glm::vec3 _velocity, float delta)

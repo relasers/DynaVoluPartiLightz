@@ -29,7 +29,7 @@ void main()
 	vec3 pp = p + v*DT;
 
 	if (pp.x < 0 || pp.x > 100) Velocities[ gid ].x *= -1;
-	if (pp.y < 0 || pp.y > 20) Velocities[ gid ].y *= -1;
+	if (pp.y < 0 || pp.y > 100) Velocities[ gid ].y *= -1;
 	if (pp.z < 0 || pp.z > 100) Velocities[ gid ].z *= -1;
 
 	Positions[ gid ].xyz = pp;

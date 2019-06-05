@@ -40,8 +40,8 @@ public:
 	void LightingPass();
 
 	void DrawTexture(GLuint textureID, GLuint x, GLuint y, GLuint width, GLuint height);
-
-
+	void ActiveDeferedFrameBuffer();
+	void BackToMainBuffer();
 
 	void SetFrameBuffer();
 	void ResetFrameBuffer();

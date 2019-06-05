@@ -20,8 +20,8 @@ but WITHOUT ANY WARRANTY.
 
 Renderer *g_Renderer = NULL;
 
-int g_WindowSizeX = 800;
-int g_WindowSizeY = 600;
+int g_WindowSizeX = 1200;
+int g_WindowSizeY = 800;
 
 
 float curr_theta = 0;
@@ -37,26 +37,38 @@ void RenderScene(void)
 	//theta += 0.00016f;
 	//std::cout << theta << std::endl;
 	g_Renderer->Update();
-	
-
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	g_Renderer->SimulateParticle();
 
 	// Renderer Test
 	//g_Renderer->Test();
 	//g_Renderer->DrawPlaneMesh();
+	
 	//g_Renderer->SetFrameBuffer();
+
+	g_Renderer->ActiveDeferedFrameBuffer();
 	g_Renderer->DrawSolidMesh();
 
-	g_Renderer->SimulateParticle();
-	g_Renderer->DrawParticle();
-	g_Renderer->LightingPass();
+	for (int i = 0; i < 50; ++i)
+	{
+		std::string name = "TinyBunny" + std::to_string(i);
+		g_Renderer->DrawSolidMesh(name);
+
+		name = "TinyDragon" + std::to_string(i);
+		g_Renderer->DrawSolidMesh(name);
+	}
 	
-	g_Renderer->ResetFrameBuffer();
+	g_Renderer->LightingPass();
+	g_Renderer->BackToMainBuffer();
+
+	g_Renderer->DrawParticle();
+	
+
+	//g_Renderer->DrawTexture(g_Renderer->GetTextureID("WorldPosition"), 0, 0, 200, 200);
+
+	//g_Renderer->ResetFrameBuffer();
 	//tDelta
 	
 	
-	//g_Renderer->DrawTexture(g_Renderer->GetTextureID("OldPage"), 0, 0, 200, 200);
 	glutSwapBuffers();
 }
 

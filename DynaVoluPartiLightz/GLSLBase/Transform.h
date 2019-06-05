@@ -22,6 +22,8 @@ public:
 		return m_m4Model; };
 	Transform& operator= (const Transform& _Transform);
 
+	glm::vec3 GetEulerAngle() const { return mEulerAngle; }
+	void Rotate(glm::vec3 _Axis, float delta);
 	void PrintModelMatrix();
 
 private:

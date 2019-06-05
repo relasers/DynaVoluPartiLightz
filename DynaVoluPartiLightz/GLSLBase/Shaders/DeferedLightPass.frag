@@ -33,17 +33,18 @@ struct Material
 	float mSpecularPower;
 };
 
-uniform bool u_ActiveOverSampling;
 uniform bool u_bInterPolate;
 uniform bool u_bTricubicInterPolate;
 uniform bool u_OnlyApplyLightIntensity;
 uniform bool u_ApplyParticleSpecular;
 uniform bool u_CheckLightDirection;
-
+uniform bool u_ActiveOverSampling;
+uniform vec3 u_CameraPos;
 uniform float u_Tension;
 
 in vec2 v_TexPos;
 
+uniform DirectionalLight dirLight;
 layout(location=0) out vec4 FragColor;
 
 uniform sampler2D gFragColor;
@@ -52,7 +53,6 @@ uniform sampler2D gWorldPosition;
 uniform sampler2D gWorldNormal;
 uniform sampler2D gViewDir;
 uniform sampler2D gSpecData;
-uniform DirectionalLight dirLight;
 uniform sampler3D u_WorldParticleLightDirection;
 uniform sampler3D u_WorldParticleLightColor;
 
@@ -234,16 +234,21 @@ vec4 TriCubicInterpolation(sampler3D _tex, vec3 _texCoord ,vec3 _leftBottomCoord
 
 void main()
 {
+	if(texture2D(gSpecData,v_TexPos).z < 0.5f)
+	discard;
+
 	FragColor = vec4(0,0,0,0);
-	vec3 WorldNormal = texture(gWorldNormal,v_TexPos).xyz;
-	vec3 viewDir = texture(gViewDir,v_TexPos).xyz;
-	Material material;
-	material.mDiffuseColor = texture(gFragColor,v_TexPos).xyz;
-	material.mSpecularFactor = texture(gSpecData,v_TexPos).x;
-	material.mSpecularPower = texture(gSpecData,v_TexPos).y;
-	FragColor.xyz += CalcDirLight(dirLight,material,WorldNormal,viewDir).xyz;
+	vec3 WorldPos = texture2D(gWorldPosition,v_TexPos).xyz;
+	vec3 WorldNormal = texture2D(gWorldNormal,v_TexPos).xyz;
+	vec3 viewDir = normalize(u_CameraPos - WorldPos);
+	Material newmat;
+	newmat.mDiffuseColor = texture2D(gFragColor,v_TexPos).xyz;
+	//newmat.mDiffuseColor = vec3(0,0,0);
+	newmat.mSpecularFactor = texture2D(gSpecData,v_TexPos).x;
+	newmat.mSpecularPower = texture2D(gSpecData,v_TexPos).y;
+	FragColor.xyz += CalcDirLight(dirLight,newmat,WorldNormal,viewDir).xyz;
 	
-	vec3 newCoord = texture(gWorldPosition,v_TexPos).xyz;
+	vec3 newCoord = WorldPos.xyz;
 	vec3 leftBottomCoord = floor(newCoord);
 	float sizeOfTex = 128.0f;
 	float texelSize = 1.0f/128.0f;
@@ -294,7 +299,7 @@ void main()
 		OverSampling3DTexture(u_WorldParticleLightColor,newCoord,texelSize)
 		: texture (u_WorldParticleLightColor,newCoord).xyzw;
 	}
-	
+
 	FragColor.xyz += (u_OnlyApplyLightIntensity) ? 
 	vec3(ParticleLightColor.a) : vec3(ParticleLightColor.rgb) * ParticleLightColor.a;
 	// calc Half vector
@@ -304,12 +309,14 @@ void main()
 		vec3 Hvector = normalize(ParticleLightVec.xyz + viewDir.xyz).xyz;
 		// N dot H
 		float NdotH = max(dot(Hvector,WorldNormal ) ,0);
-		float SpecIntensity = pow( NdotH, material.mSpecularPower ) * ParticleLightColor.a;
+		float SpecIntensity = pow( NdotH, newmat.mSpecularPower ) * ParticleLightColor.a;
 		FragColor.xyz += SpecIntensity * vec3(1,1,1);
 	}
 
 	if(u_CheckLightDirection)
 		FragColor.xyz = (ParticleLightVec+1)*0.5f;
-	FragColor.xyz = texture(gWorldPosition,v_TexPos).xyz;
-	//FragColor.xyz = vec3(v_TexPos.xy,1);
+	//FragColor.xyz = texture(gWorldNormal,v_TexPos).xyz;
+	//FragColor.xyz = viewDir.xyz;
+
+	// FragColor.xyz = WorldPos.xyz ;
 }

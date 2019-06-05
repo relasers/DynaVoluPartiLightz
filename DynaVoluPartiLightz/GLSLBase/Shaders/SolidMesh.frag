@@ -107,10 +107,10 @@ vec3 CalcPointLight(PointLight light,Material mate, vec3 normal, vec3 fragPos, v
 
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 BrightColor;
-layout (location = 2) out vec4 WorldPosition;
-layout (location = 3) out vec4 WorldNormal;
-layout (location = 4) out vec4 ViewDir;
-layout (location = 5) out vec4 SpecData; // r - spec power, g - spec Factor
+layout (location = 2) out vec3 WorldPosition;
+layout (location = 3) out vec3 WorldNormal;
+layout (location = 4) out vec3 ViewDir;
+layout (location = 5) out vec3 SpecData; // r - spec power, g - spec Factor
 
 in vec4 v_Color;
 in vec3 v_Normal;
@@ -327,11 +327,12 @@ void ForwardRendering()
 void DeferedRendering()
 {
 	FragColor.xyz = u_material.mDiffuseColor.xyz;
-	WorldNormal.xyz = v_Normal;
+	WorldNormal.xyz = v_Normal.xyz;
 	WorldPosition.xyz = v_WorldPosition.xyz;
 	ViewDir.xyz = v_viewDir.xyz;
 	SpecData.x = u_material.mSpecularFactor;
 	SpecData.y = u_material.mSpecularPower;
+	SpecData.z = 1.0f;
 }
 
 void main()
@@ -350,12 +351,12 @@ void main()
 	{
 		ForwardRendering();
 	}
-
-	
 	
 	float brightness = dot(FragColor.rgb, vec3(0.2126, 0.7152, 0.0722));
 	if(brightness > 1.0)
         BrightColor = vec4(FragColor.rgb, 1.0);
     else
         BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
+
+	//FragColor.xyz = v_WorldPosition.xyz;
 }
