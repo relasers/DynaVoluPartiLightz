@@ -30,7 +30,7 @@ vec3 CalcDirLight(DirectionalLight light, vec3 normal, vec3 viewDir)
 
 void main()
 {
-	FragColor = vec4(0.1, 0.1, 0.1, 0);
+	FragColor = vec4(0, 0, 0, 0);
 	FragColor += vec4(CalcDirLight(dirLight,v_Normal,v_viewDir), 1);
-	//FragColor.xyzw = vec4(1);
+	//FragColor = vec4(1);
 }

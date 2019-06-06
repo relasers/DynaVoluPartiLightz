@@ -15,5 +15,5 @@ void main()
 	if (0 < f_CollideTime)
 		FragColor = vec4(1, 0, 0, 1);
 	else
-		FragColor = vec4(1, 1, 1, 1);
+		FragColor = vec4(0.2f, 0, 0, 1);
 }

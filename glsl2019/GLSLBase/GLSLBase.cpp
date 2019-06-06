@@ -12,8 +12,8 @@ but WITHOUT ANY WARRANTY.
 #include "Renderer.h"
 #include "Camera.h"
 
-unsigned int g_ClientWidth = 500;
-unsigned int g_ClientHeight = 500;
+unsigned int g_ClientWidth = 1000;
+unsigned int g_ClientHeight = 1000;
 
 Renderer* g_Renderer = nullptr;
 Camera* g_MainCamera = nullptr;
@@ -22,19 +22,23 @@ float g_RunRate = 0.0f;
 
 void RenderScene(void)
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-
+	auto start = std::chrono::high_resolution_clock::now();
 	// Render
-	//g_Renderer->DrawRect(0.5f);
-	//g_Renderer->DrawPageTurning(glm::vec3(0, 1, 0), 1.0f, g_RunRate);
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	//glEnable(GL_DEPTH_TEST);
 	//g_Renderer->DrawParticleCDTexture();
 	//g_Renderer->DrawParticles();
-	g_Renderer->DrawToFrameBufferTest(0);
-
-	//g_Renderer->DrawCubeMesh();
 	//g_Renderer->DrawCubeMeshCDTexture();
+	//g_Renderer->DrawCubeMesh();
+
+	g_Renderer->DrawParticleSystem();
+
 	glutSwapBuffers();
+	auto du = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();
+
+	//std::cout << du << "\n";
+
 }
 
 void Idle(void)

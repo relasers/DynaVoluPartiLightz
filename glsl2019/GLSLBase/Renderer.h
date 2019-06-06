@@ -1,14 +1,14 @@
 #pragma once
 #include "Light.h"
 #include "Framebuffer.h"
+#include "ShaderProgram.h"
+#include "Mesh.h"
 
 class Camera;
-class Mesh;
 class GameObject;
 
 class Renderer {
 public:
-	enum class OBJECT_TYPE{ CUBE };
 	struct VBO {
 		GLuint buf;
 		GLuint count;
@@ -27,37 +27,22 @@ public:
 
 	void SetCamera(Camera* pCamera) { m_pCamera = pCamera; }
 
-	GLuint CreatePngTexture(const char* filePath);
-	GLuint CreateBmpTexture(const char* filePath);
-	   
-	void DrawRect(float size);
-	void DrawPageTurning(const glm::vec3& axis, float radius, float run_rate);
 	void DrawParticleCDTexture();
 	void DrawParticles();
-	void DrawToFrameBufferTest(GLuint rander_target_id);
+
+	void DrawObjectCDTexture(GameObject& obj);
+	void DrawObject(GameObject& obj);
 
 	void DumpTexture(GLuint tex_id, GLuint x, GLuint y, GLuint w, GLuint h);
 
-	void DrawCubeMesh();
-	void DrawCubeMeshCDTexture();
+	void DrawParticleSystem();
 
 private:
 	void Init(unsigned int client_width, unsigned int client_height);
 
-	bool ReadFile(std::string& out_data, const char* filename);
-	void AddShader(GLuint ShaderProgram, const char* pShaderText, GLenum ShaderType);
-	GLuint CompileShaders(const char* filenameVS, const char* filenameFS);
-	GLuint CompileShaders(const char* filenameVS, const char* filenameGS, const char* filenameFS);
-
-	unsigned char* loadBMPRaw(const char* imagepath, unsigned int& outWidth, unsigned int& outHeight);
-	
-	void CreateGeometryMeshDatas();
-
 	void CreateRectVBO(); 
-	void CreateProxyGeometryVBO();
 	void CreateParticleTFO();
 
-	void CreateVBOandIBObyLoadMeshs();
 	void CreateSceneObjects();
 
 	void CreateFrameResources();
@@ -71,41 +56,27 @@ private:
 	Camera*						m_pCamera;
 
 	VBO							m_vboRect;
-	VBO							m_vboProxyGeo;
 
-	GLuint						m_SolidRectShader;
-	GLuint						m_PageTurningShader;
-	GLuint						m_TextureDumpShader;
-	GLuint						m_ParticleShader;
-	GLuint						m_ParticleCDShader;
-
-	GLuint						m_nTextures;
-	GLuint*						m_pTextures;
+	ShaderProgram				m_TextureDumpShader;
+	ShaderProgram				m_ParticleShader;
+	ShaderProgram				m_ParticleCDShader;
 
 	GLuint						m_nTFOs;
 	TFO*						m_pTFOs;
 	int							m_CurrTFO;
 
-	Framebuffer					m_FB_ParticleCDTexture;
+	Framebuffer					m_FB_ParticleCDTexture[2];
 	Framebuffer					m_FB_ObjectCDTexture;
 
-	GLuint						m_nFBOs;
-	GLuint*						m_pFBOs;
-
-	GLuint						m_nRenderTargets;
-	GLuint*						m_pRenderTargets;
-
-	GLuint						m_nDepthBuffers;
-	GLuint*						m_pDepthBuffers;
-
 	//Mesh Object
-	GLuint						m_MeshShader;
-	GLuint						m_MeshCDShader;
+	ShaderProgram				m_MeshShader;
+	ShaderProgram				m_MeshCDShader;
 
-	std::unordered_map<OBJECT_TYPE, std::unique_ptr<Mesh>>	m_Meshes;
-	std::unordered_map<OBJECT_TYPE, GameObject>				m_GameObjects;
-	std::unordered_map<OBJECT_TYPE, GLuint>					m_VBO;
-	std::unordered_map<OBJECT_TYPE, GLuint>					m_IBO;
+	Mesh						m_CubeMesh;
+	Mesh						m_BunnyMesh;
+	Mesh						m_DragonMesh;
+
+	std::vector<GameObject>		m_Objects;
 
 	// Light
 	DirectionalLight m_MainDirectionalLight;

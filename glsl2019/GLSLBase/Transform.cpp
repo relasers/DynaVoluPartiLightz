@@ -2,62 +2,81 @@
 #include "Transform.h"
 
 Transform::Transform()
+	: mPosition(0.0f)
+	, mEulerAngles(0.0f)
+	, mQuaternion(glm::vec3(0.0f))
+	, mScale(1.0f)
+	, mTransform(1.0f)
 {
-	Update();
 }
 
 Transform::~Transform()
 {
 }
 
-void Transform::Update()
+void Transform::set_pos(const glm::vec3& pos)
 {
-	UpdateMatrix();
-	
+	mPosition = pos;
+	GenerateMatrixFromParam();
 }
 
-void Transform::SetPosition(glm::vec3 _Position)
+void Transform::set_angle(const glm::vec3& angle)
 {
-	mPosition = _Position;
-	Update();
+	mEulerAngles = angle;
+	GenerateMatrixFromParam();
 }
 
-void Transform::SetEulerAngle(glm::vec3 _EulerAngle)
+void Transform::set_quat(const glm::quat& quat)
 {
-	mEulerAngle = _EulerAngle;
-	Update();
+	mQuaternion = quat;
+	GenerateMatrixFromParam();
 }
 
-void Transform::SetScale(glm::vec3 _Scale)
+void Transform::set_scale(const glm::vec3& scale)
 {
-	mScale = _Scale;
-	Update();
+	mScale = scale;
+	GenerateMatrixFromParam();
 }
 
-Transform & Transform::operator=(const Transform & _Transform)
+void Transform::set_mtx(const glm::mat4& transform)
 {
-	mPosition = _Transform.mPosition;
-	mEulerAngle = _Transform.mEulerAngle;
-	mQuaternion = _Transform.mQuaternion;
-	mScale = _Transform.mScale;
+	mTransform = transform;
+	GenerateParamFromMatrix();
+}
+
+Transform& Transform::operator=(const Transform & other)
+{
+	mPosition = other.mPosition;
+	mEulerAngles = other.mEulerAngles;
+	mQuaternion = other.mQuaternion;
+	mScale = other.mScale;
+	mTransform = other.mTransform;
 	return *this;
 }
 
 void Transform::PrintModelMatrix()
 {
-	std::cout << m_m4Model[0][0] << " " << m_m4Model[0][1] << " " << m_m4Model[0][2] << " " << m_m4Model[0][3] << std::endl;
-	std::cout << m_m4Model[0][0] << " " << m_m4Model[1][1] << " " << m_m4Model[1][2] << " " << m_m4Model[1][3] << std::endl;
-	std::cout << m_m4Model[0][0] << " " << m_m4Model[2][1] << " " << m_m4Model[2][2] << " " << m_m4Model[2][3] << std::endl;
-	std::cout << m_m4Model[0][0] << " " << m_m4Model[3][1] << " " << m_m4Model[3][2] << " " << m_m4Model[3][3] << std::endl;
+	std::cout << mTransform[0][0] << " " << mTransform[0][1] << " " << mTransform[0][2] << " " << mTransform[0][3] << std::endl;
+	std::cout << mTransform[0][0] << " " << mTransform[1][1] << " " << mTransform[1][2] << " " << mTransform[1][3] << std::endl;
+	std::cout << mTransform[0][0] << " " << mTransform[2][1] << " " << mTransform[2][2] << " " << mTransform[2][3] << std::endl;
+	std::cout << mTransform[0][0] << " " << mTransform[3][1] << " " << mTransform[3][2] << " " << mTransform[3][3] << std::endl;
 }
 
-void Transform::UpdateMatrix()
+void Transform::GenerateMatrixFromParam()
 {
-	glm::mat4 m4Trans = glm::translate(glm::mat4(1.f), mPosition);
-	mQuaternion = glm::quat(mEulerAngle);
-	glm::mat4 m4Rot = glm::toMat4(mQuaternion);
+	glm::mat4 translate = glm::translate(glm::mat4(1.f), mPosition);
+	glm::mat4 rotate = glm::toMat4(mQuaternion);
+	glm::mat4 scale = glm::scale(glm::mat4(1.f), mScale);
+	mTransform = translate * rotate * scale;
+}
 
-	glm::mat4 m4Scale = glm::scale(glm::mat4(1.f), mScale);
-
-	m_m4Model = m4Trans * m4Rot * m4Scale;
+void Transform::GenerateParamFromMatrix()
+{
+	mPosition = mTransform[3];
+	mQuaternion = glm::toQuat(mTransform);
+	mEulerAngles = glm::eulerAngles(mQuaternion);
+	glm::mat4 inv_translate = glm::inverse(glm::translate(glm::mat4(1.f), mPosition));
+	glm::mat4 inv_rotate = glm::inverse(glm::toMat4(mQuaternion));
+	glm::mat4 scale = inv_rotate * inv_translate * mTransform;
+	mScale = glm::vec3(scale[0][0], scale[1][1], scale[2][2]);
 }

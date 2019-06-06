@@ -1,9 +1,12 @@
 #version 450
-layout(location=0) out vec4 FragColor;
+layout(location = 0) out vec4 outpos;
+layout(location = 1) out vec4 outnorm;
 
-varying vec3 v_Pos;
+varying vec3 v_pos;
+varying vec3 v_norm;
 
 void main()
 {
-	FragColor = vec4(v_Pos, 0.4f);
+	outpos = vec4(v_pos, 1.0f);
+	outnorm = vec4(normalize(v_norm), 1.0f);
 }
