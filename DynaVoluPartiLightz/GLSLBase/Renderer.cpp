@@ -262,7 +262,7 @@ void Renderer::CreateShaderStorageBufferObjectsForParticles()
 		particlelightcolor[i].mLightColor.x = RandomRangeFloat(0.5f, 1.0f);
 		particlelightcolor[i].mLightColor.y = RandomRangeFloat(0.5f, 1.0f);
 		particlelightcolor[i].mLightColor.z = RandomRangeFloat(0.5f, 1.0f);
-		particlelightcolor[i].mLightColor.w = RandomRangeFloat(0.5,1);
+		particlelightcolor[i].mLightColor.w = RandomRangeFloat(0.5,0.75);
 	}
 	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
@@ -1203,8 +1203,10 @@ void Renderer::Update()
 		std::string bunnyname = "TinyBunny" + std::to_string(i);
 		std::string dragonname = "TinyDragon" + std::to_string(i);
 
-		mGameObjects[bunnyname].GetTransform()->Rotate(glm::vec3(0,1,0), i*0.0016);
-		mGameObjects[dragonname].GetTransform()->Rotate(glm::vec3(0, 1, 0), i*0.0016);
+		float dir = (i % 2 == 0) ? -1 : 1;
+
+		mGameObjects[bunnyname].GetTransform()->Rotate(glm::vec3(0,1,0), i*0.0016* dir);
+		mGameObjects[dragonname].GetTransform()->Rotate(glm::vec3(0, 1, 0), i*0.0016* dir);
 	}
 }
 

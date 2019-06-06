@@ -19,7 +19,7 @@ void main()
 	//v_FragPos = (u_Model * vec4(a_Position, 1.f)).xyz;
 	v_Color = a_VertColor;
 	v_Color = vec4(a_Normal,1);
-	v_Normal = a_Normal;
+	v_Normal = normalize(u_Model * vec4(a_Normal, 0.f )).xyz;
 	v_WorldPosition = u_Model * vec4(a_Position, 1.f);
 	gl_Position = u_ProjView * v_WorldPosition;
 	v_viewDir = normalize( u_CameraPos.xyz - v_WorldPosition.xyz );
