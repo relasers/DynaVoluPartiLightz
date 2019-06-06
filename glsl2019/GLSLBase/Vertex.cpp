@@ -3,13 +3,16 @@
 
 Vertex::Vertex()
 {
-	pos = { RAND_FLOAT(-0.5f, 0.5f), RAND_FLOAT(-0.5f, 0.5f), RAND_FLOAT(-0.5f, 0.5f) };
-	dir = glm::normalize(glm::vec3{ RAND_FLOAT(-0.5f, 0.5f), RAND_FLOAT(-0.5f, 0.5f), RAND_FLOAT(-0.5f, 0.5f) });
-	speed = RAND_FLOAT(0.01f, 0.05f);
-	collide_time = 0.0f;
+	memset(f, 0, sizeof(Vertex));
 }
 
 float& Vertex::operator[](int idx)
 {
 	return f[idx];
+}
+
+Vertex& Vertex::operator=(const Vertex& other)
+{
+	memcpy_s(f, sizeof(Vertex), other.f, sizeof(Vertex));
+	return *this;
 }
