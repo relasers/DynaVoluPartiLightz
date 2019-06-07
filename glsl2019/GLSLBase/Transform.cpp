@@ -54,12 +54,12 @@ Transform& Transform::operator=(const Transform & other)
 	return *this;
 }
 
-void Transform::PrintModelMatrix()
+void Transform::dump()
 {
 	std::cout << mTransform[0][0] << " " << mTransform[0][1] << " " << mTransform[0][2] << " " << mTransform[0][3] << std::endl;
-	std::cout << mTransform[0][0] << " " << mTransform[1][1] << " " << mTransform[1][2] << " " << mTransform[1][3] << std::endl;
-	std::cout << mTransform[0][0] << " " << mTransform[2][1] << " " << mTransform[2][2] << " " << mTransform[2][3] << std::endl;
-	std::cout << mTransform[0][0] << " " << mTransform[3][1] << " " << mTransform[3][2] << " " << mTransform[3][3] << std::endl;
+	std::cout << mTransform[1][0] << " " << mTransform[1][1] << " " << mTransform[1][2] << " " << mTransform[1][3] << std::endl;
+	std::cout << mTransform[2][0] << " " << mTransform[2][1] << " " << mTransform[2][2] << " " << mTransform[2][3] << std::endl;
+	std::cout << mTransform[3][0] << " " << mTransform[3][1] << " " << mTransform[3][2] << " " << mTransform[3][3] << std::endl;
 }
 
 void Transform::GenerateMatrixFromParam()

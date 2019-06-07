@@ -113,17 +113,19 @@ void Renderer::DrawParticles()
 
 	glUniform1i(glGetUniformLocation(shader, "u_ClientWidth"), g_ClientWidth);
 	glUniform1i(glGetUniformLocation(shader, "u_ClientHeight"), g_ClientHeight);
+	auto& camera_pos = m_pCamera->GetPos();
+	glUniform3f(glGetUniformLocation(shader, "u_CameraPos"), camera_pos.x, camera_pos.y, camera_pos.z);
+
+	glUniform1i(glGetUniformLocation(shader, "u_ParticleTexTure"), 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_FB_ParticleCDTexture[m_CurrTFO].get_rendertarget_buffer());
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_pTFOs[m_CurrTFO].buf);
 
 	GLint aPos = glGetAttribLocation(shader, "a_Pos");
 	GLint aDir = glGetAttribLocation(shader, "a_Dir");
 	GLint aSpeed = glGetAttribLocation(shader, "a_Speed");
 	GLint aCollideTime = glGetAttribLocation(shader, "a_CollideTime");
-
-	glUniform1i(glGetUniformLocation(shader, "u_CDTexTure"), 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_FB_ParticleCDTexture[m_CurrTFO].get_rendertarget_buffer());
-
-	glBindBuffer(GL_ARRAY_BUFFER, m_pTFOs[m_CurrTFO].buf);
 
 	glEnableVertexAttribArray(aPos);
 	glEnableVertexAttribArray(aDir);
@@ -150,23 +152,15 @@ void Renderer::DrawObjectCDTexture(GameObject& obj)
 	auto shader = m_MeshCDShader.get();
 	glUseProgram(shader);
 
-	int attribPosition = glGetAttribLocation(shader, "a_Position");
-	int attribNormal = glGetAttribLocation(shader, "a_Normal");
-
-	GLuint projView = glGetUniformLocation(shader, "u_ProjView");
-	GLuint world = glGetUniformLocation(shader, "u_World");
-
-	GLuint cameraPos = glGetUniformLocation(shader, "u_CameraPos");
-
-	glUniformMatrix4fv(projView, 1, GL_FALSE, &m_pCamera->GetProjView()[0][0]);
-	glUniformMatrix4fv(world, 1, GL_FALSE, &obj.transform().mtx()[0][0]);
-
-	glUniform3f(cameraPos,
-		m_pCamera->GetPos().x,
-		m_pCamera->GetPos().y,
-		m_pCamera->GetPos().z);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "u_ProjView"), 1, GL_FALSE, &m_pCamera->GetProjView()[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "u_World"), 1, GL_FALSE, &obj.transform().mtx()[0][0]);
+	auto& camera_pos = m_pCamera->GetPos();
+	glUniform3f(glGetUniformLocation(shader, "u_CameraPos"), camera_pos.x, camera_pos.y, camera_pos.z);
 
 	obj.bind_resources();
+
+	int attribPosition = glGetAttribLocation(shader, "a_Position");
+	int attribNormal = glGetAttribLocation(shader, "a_Normal");
 
 	glEnableVertexAttribArray(attribPosition);
 	glEnableVertexAttribArray(attribNormal);
@@ -186,36 +180,27 @@ void Renderer::DrawObject(GameObject& obj)
 
 	glUseProgram(shader);
 
+	glUniformMatrix4fv(glGetUniformLocation(shader, "u_ProjView"), 1, GL_FALSE, &m_pCamera->GetProjView()[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "u_World"), 1, GL_FALSE, &obj.transform().mtx()[0][0]);
+	auto& camera_pos = m_pCamera->GetPos();
+	glUniform3f(glGetUniformLocation(shader, "u_CameraPos"), camera_pos.x, camera_pos.y, camera_pos.z);
+
+	glUniform4f(
+		glGetUniformLocation(shader, "dirLight.mLightColor")
+		, m_MainDirectionalLight.mLightColor.x
+		, m_MainDirectionalLight.mLightColor.y
+		, m_MainDirectionalLight.mLightColor.z
+		, m_MainDirectionalLight.mLightColor.w);
+
+	glUniform3f(
+		glGetUniformLocation(shader, "dirLight.mDirection")
+		, m_MainDirectionalLight.mDirection.x
+		, m_MainDirectionalLight.mDirection.y
+		, m_MainDirectionalLight.mDirection.z);
+
 	int attribPosition = glGetAttribLocation(shader, "a_Position");
 	int attribNormal = glGetAttribLocation(shader, "a_Normal");
 	int attribTexCoord = glGetAttribLocation(shader, "a_TexCoord");
-
-	GLuint projView = glGetUniformLocation(shader, "u_ProjView");
-	GLuint world = glGetUniformLocation(shader, "u_World");
-
-	GLuint cameraPos = glGetUniformLocation(shader, "u_CameraPos");
-	GLuint mainDirLight_Color = glGetUniformLocation(shader, "dirLight.mLightColor");
-	GLuint mainDirLight_Dir = glGetUniformLocation(shader, "dirLight.mDirection");
-
-	glUniformMatrix4fv(projView, 1, GL_FALSE, &m_pCamera->GetProjView()[0][0]);
-	glUniformMatrix4fv(world, 1, GL_FALSE, &obj.transform().mtx()[0][0]);
-
-	glUniform3f(cameraPos, 
-		m_pCamera->GetPos().x,
-		m_pCamera->GetPos().y,
-		m_pCamera->GetPos().z);
-
-	glUniform4f(mainDirLight_Color, 
-		m_MainDirectionalLight.mLightColor.x,
-		m_MainDirectionalLight.mLightColor.y,
-		m_MainDirectionalLight.mLightColor.z,
-		m_MainDirectionalLight.mLightColor.w);
-
-	glUniform3f(mainDirLight_Dir, 
-		m_MainDirectionalLight.mDirection.x,
-		m_MainDirectionalLight.mDirection.y,
-		m_MainDirectionalLight.mDirection.z);
-
 
 	glEnableVertexAttribArray(attribPosition);
 	glEnableVertexAttribArray(attribNormal);
@@ -279,7 +264,7 @@ void Renderer::DrawParticleSystem()
 		DrawObject(obj);
 	DrawParticles();
 
-	DumpTexture(m_FB_ParticleCDTexture[m_CurrTFO].get_rendertarget_buffer(), 0, 0, 250, 250);
+	//DumpTexture(m_FB_ParticleCDTexture[m_CurrTFO].get_rendertarget_buffer(), 0, 0, 250, 250);
 	//DumpTexture(m_FB_ObjectCDTexture.get_rendertarget_buffer(1), 0, 0, 400, 400);
 
 	glDisable(GL_DEPTH_TEST);
@@ -293,8 +278,8 @@ void Renderer::Init(unsigned int client_width, unsigned int client_height)
 
 	// Load shaders
 	m_ParticleCDShader.compile("./Shaders/ParticleCD.vert", "./Shaders/ParticleCD.geom", "./Shaders/ParticleCD.frag");
-	//m_ParticleShader.compile("./Shaders/Particle.vert", "./Shaders/Particle.geom", "./Shaders/Particle.frag");
-	m_ParticleShader.compile("./Shaders/Particle.vert", "./Shaders/Particle.frag");
+	m_ParticleShader.compile("./Shaders/Particle.vert", "./Shaders/Particle.geom", "./Shaders/Particle.frag");
+	//m_ParticleShader.compile("./Shaders/Particle.vert", "./Shaders/Particle.frag");
 	m_MeshCDShader.compile("./Shaders/SolidMeshCD.vert", "./Shaders/SolidMeshCD.frag");
 	m_MeshShader.compile("./Shaders/SolidMesh.vert", "./Shaders/SolidMesh.frag");
 	m_TextureDumpShader.compile("./Shaders/TextureDump.vert", "./Shaders/TextureDump.frag");
@@ -352,22 +337,33 @@ void Renderer::CreateParticleTFO()
 		glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, m_pTFOs[i].tf);
 		glBindBuffer(GL_ARRAY_BUFFER, m_pTFOs[i].buf);
 
-		m_pTFOs[i].count = 30000;
+		m_pTFOs[i].count = 200000;
 		std::vector<Vertex> particles;
 		Vertex vertex;
-		for (int j = 0; j < 15000; ++j) {
-			vertex.pos = glm::vec3(RAND_FLOAT(0.1f, 0.3f), RAND_FLOAT(0.0f, 5.0f), RAND_FLOAT(-0.2f, 0.2f));
+		for (int j = 0; j < 100000; ++j) {
+			vertex.pos = glm::vec3(RAND_FLOAT(0.18f, 0.22f), RAND_FLOAT(0.0f, 20.0f), RAND_FLOAT(-0.15f, -0.05f));
 			vertex.dir = glm::vec3(0, -1.0f, 0);
 			vertex.speed = 0.0f;
 			particles.push_back(vertex);
 		}
-		for (int j = 0; j < 15000; ++j) {
-			vertex.pos = glm::vec3(RAND_FLOAT(-0.1f, -0.35f), RAND_FLOAT(0.0f, 5.0f), RAND_FLOAT(-0.1f, 0.1f));
+		for (int j = 0; j < 100000; ++j) {
+			vertex.pos = glm::vec3(RAND_FLOAT(-0.35f, -0.1f), RAND_FLOAT(0.0f, 20.0f), RAND_FLOAT(-0.1f, 0.1f));
 			vertex.dir = glm::vec3(0, -1.0f, 0);
 			vertex.speed = 0.0f;
 			particles.push_back(vertex);
 		}
-
+		//for (int j = 0; j < m_pTFOs[i].count; ++j) {
+		//	vertex.pos = glm::vec3(RAND_FLOAT(-0.35f, -0.1f), RAND_FLOAT(0.0f, 20.0f), RAND_FLOAT(-0.05f, 0.05f));
+		//	vertex.dir = glm::vec3(0, -0, 0);
+		//	vertex.speed = 0.0f;
+		//	particles.push_back(vertex);
+		//}
+		//for (int j = 0; j < m_pTFOs[i].count; ++j) {
+		//	vertex.pos = glm::vec3(RAND_FLOAT(0.18f, 0.22f), RAND_FLOAT(0.0f, 20.0f), RAND_FLOAT(-0.15f, -0.05f));
+		//	vertex.dir = glm::vec3(0, -0, 0);
+		//	vertex.speed = 0.0f;
+		//	particles.push_back(vertex);
+		//}
 		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * m_pTFOs[i].count, particles.data(), GL_DYNAMIC_DRAW);
 		glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, m_pTFOs[i].buf);
 	}

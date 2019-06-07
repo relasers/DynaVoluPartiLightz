@@ -19,7 +19,7 @@ public:
 
 	Transform& operator= (const Transform& other);
 
-	void PrintModelMatrix();
+	void dump();
 
 private:
 	void GenerateMatrixFromParam();

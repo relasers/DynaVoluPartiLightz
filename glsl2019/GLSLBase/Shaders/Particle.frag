@@ -2,18 +2,17 @@
 
 layout(location=0) out vec4 FragColor;
 
-in vec3 v_Pos;
-in vec3 v_Dir;
-in float f_Speed;
-in float f_CollideTime;
+in vec3 vPos;
+in vec3 vDir;
+in float fSpeed;
+in float fCollideTime;
 
-in vec4 v_TexelColor;
-
+uniform sampler2D u_ParticleTexTure;
 
 void main()
 {
-	if (0 < f_CollideTime)
+	if (0 < fCollideTime)
 		FragColor = vec4(1, 0, 0, 1);
 	else
-		FragColor = vec4(0.2f, 0, 0, 1);
+		FragColor = vec4(0, 0.2f, 0, 1);
 }
